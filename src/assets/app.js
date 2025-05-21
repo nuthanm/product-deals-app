@@ -79,25 +79,39 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fetch autocomplete results from API
     async function fetchAutocompleteResults(query) {
-        try {
-            showLoading('Searching products...');
-            
-            const response = await axios.get(`${API_BASE_URL}/autocomplete?query=${encodeURIComponent(query)}`);
-            
-            hideLoading();
-            
-            if (response.data && response.data.length > 0) {
-                displayAutocompleteResults(response.data);
-            } else {
-                autocompleteResults.innerHTML = '<div class="p-3 text-gray-500 text-center">No products found</div>';
-                autocompleteResults.classList.remove('hidden');
-            }
-        } catch (error) {
-            hideLoading();
-            console.error('Error fetching autocomplete results:', error);
-            showError('Failed to fetch product suggestions. Please try again.');
+    try {
+        // Remove this line that shows loading:
+        // showLoading('Searching products...');
+        
+        // Add a subtle indicator instead (optional)
+        productSearch.classList.add('searching');
+        
+        const response = await axios.get(`${API_BASE_URL}/autocomplete?query=${encodeURIComponent(query)}`);
+        
+        // Remove this line that hides loading:
+        // hideLoading();
+        
+        // Remove the subtle indicator
+        productSearch.classList.remove('searching');
+        
+        if (response.data && response.data.length > 0) {
+            displayAutocompleteResults(response.data);
+        } else {
+            autocompleteResults.innerHTML = '<div class="p-3 text-gray-500 text-center">No products found</div>';
+            autocompleteResults.classList.remove('hidden');
         }
+    } catch (error) {
+        // Remove this line:
+        // hideLoading();
+        
+        // Remove the subtle indicator
+        productSearch.classList.remove('searching');
+        
+        console.error('Error fetching autocomplete results:', error);
+        // Don't show error for autocomplete - it's too disruptive
+        // showError('Failed to fetch product suggestions. Please try again.');
     }
+}
     
     // Display autocomplete results
     function displayAutocompleteResults(results) {
