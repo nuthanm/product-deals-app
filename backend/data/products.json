@@ -1,6 +1,6 @@
 [
-  { "productName": "milk" },
-  { "productName": "coffee" },
-  { "productName": "bread" },
-  { "productName": "butter milk" }
+  { "name": "milk" },
+  { "name": "coffee" },
+  { "name": "bread" },
+  { "name": "butter milk" }
 ]
