@@ -8,6 +8,9 @@ const routes = require('./routes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+console.log("🟢 Starting server.js...");
+console.log("ENV MONGODB_URI:", process.env.MONGODB_URI ? "✅ present" : "❌ missing");
+
 // Middleware
 app.use(cors());
 app.use(express.json());
