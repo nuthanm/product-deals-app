@@ -21,28 +21,19 @@ if (process.env.REDIS_ENABLED === 'true') {
 exports.getAutocompleteResults = async (req, res) => {
   try {
     const { query } = req.query;
-    
+
     if (!query || query.length < 2) {
       return res.status(400).json({ message: 'Query must be at least 2 characters' });
     }
-    
-    // Check Redis cache if enabled
+
+    // Check Redis cache
     if (redisClient && redisClient.isReady) {
       const cacheKey = `autocomplete:${query.toLowerCase()}`;
       const cachedResults = await redisClient.get(cacheKey);
-      
       if (cachedResults) {
         return res.json(JSON.parse(cachedResults));
       }
     }
-    
-    // Search in MongoDB
-    // const products = await Product.find({
-    //   name: { $regex: query, $options: 'i' }
-    // })
-    // // .select('productName  category')
-    // .select('productName')
-    // .limit(10);
 
     const products = await Product.find({
       productName: { $regex: query, $options: 'i' }
@@ -50,40 +41,29 @@ exports.getAutocompleteResults = async (req, res) => {
     .select('productName _id category')
     .limit(10);
 
-    // Then map the results to match what the frontend expects
+    // If no results found, add a generic fallback
+    if (products.length === 0) {
+      products.push({
+        productName: query,
+        _id: null,
+        category: 'General'
+      });
+    }
+
+    // Mapping should be done after fallback
     const mappedResults = products.map(product => ({
       name: product.productName,
       id: product._id,
       category: product.category || 'General'
     }));
 
-    // const products = await Product.find({
-    //   $or: [
-    //     { name: { $regex: query, $options: 'i' } },
-    //     { $text: { $search: query } }
-    //   ]
-    // })
-    // .select('name category')
-    // .limit(10);
-    
-    // If no results, create a generic product
-    if (products.length === 0) {
-      products.push({
-        name: query,
-        category: 'General'
-      });
-    }
-    
-    // Cache results if Redis is enabled
+    // Cache result
     if (redisClient && redisClient.isReady) {
       const cacheKey = `autocomplete:${query.toLowerCase()}`;
-      await redisClient.set(cacheKey, JSON.stringify(products), {
-        EX: 3600 // 1 hour expiration
-      });
+      await redisClient.set(cacheKey, JSON.stringify(mappedResults), { EX: 3600 });
     }
-    
-    
-res.json(mappedResults);
+
+    res.json(mappedResults);
   } catch (error) {
     console.error('Error in autocomplete:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
