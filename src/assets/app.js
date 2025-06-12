@@ -24,7 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let typingTimer;
     const MAX_PRODUCTS = 5;
     const TYPING_INTERVAL = 300; // ms
-    const API_BASE_URL = '/api'; // Will be replaced with actual API URL in production
+    //const API_BASE_URL = '/api'; // Will be replaced with actual API URL in production
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
+
     
     // Initialize
     init();
