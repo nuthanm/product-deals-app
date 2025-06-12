@@ -105,14 +105,14 @@ exports.getProductDeals = async (req, res) => {
     // Otherwise, fetch from SerpAPI
     const productDeals = await Promise.all(validProductDocs.map(async (product) => {
       try {
-        console.log('product Name before SerpAPI:', product.productName);
-        const deals = await fetchDealsFromSerpAPI(product.productName);
+        console.log('product Name before SerpAPI:', product.name);
+        const deals = await fetchDealsFromSerpAPI(product.name);
         //Todo: Remove this console log in production
         
         return {
           product: {
             id: product.id,
-            name: product.productName
+            name: product.name
           },
           deals
         };
@@ -121,7 +121,7 @@ exports.getProductDeals = async (req, res) => {
         return {
           product: {
             id: product.id,
-            name: product.productName
+            name: product.name
           },
           deals: []
         };
@@ -133,7 +133,7 @@ exports.getProductDeals = async (req, res) => {
     //   productHistory: productHistory.id,
     //   products: productDeals.map(pd => ({
     //     product: pd.product.id,
-    //     productName: pd.product.name,
+    //     name: pd.product.name,
     //     deals: pd.deals
     //   }))
     // });
@@ -155,12 +155,12 @@ exports.getProductDeals = async (req, res) => {
 /**
  * Fetch deals from SerpAPI
  */
-async function fetchDealsFromSerpAPI(productName) {
+async function fetchDealsFromSerpAPI(name) {
   try {
     const apiKey = process.env.SERPAPI_KEY;
     //Todo: Remove this console log in production
     console.log('SerpAPI Key:', apiKey);
-    console.log('Product Name:', productName);
+    console.log('Product Name:', name);
 
     if (!apiKey) {
       throw new Error('SERPAPI_KEY is not defined in environment variables');
@@ -168,7 +168,7 @@ async function fetchDealsFromSerpAPI(productName) {
     
     const params = {
       api_key: apiKey,
-      q: productName,
+      q: name,
       engine: 'google_shopping',
       google_domain: 'google.com.au',
       hl: 'en',
