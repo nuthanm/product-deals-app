@@ -21,8 +21,9 @@ app.use('/api', routes);
 
 // ✅ Health check route
 app.get('/', (req, res) => {
-  res.send('🚀 API is running successfully');
+  res.status(200).send('✅ API backend is running');
 });
+
 
 // ✅ Connect to MongoDB (remove deprecated options)
 mongoose.connect(process.env.MONGODB_URI)
