@@ -36,15 +36,15 @@ exports.getAutocompleteResults = async (req, res) => {
     }
 
     const products = await Product.find({
-      productName: { $regex: query, $options: 'i' }
+      name: { $regex: query, $options: 'i' }
     })
-    .select('productName _id category')
+    .select('name _id category')
     .limit(10);
 
     // If no results found, add a generic fallback
     if (products.length === 0) {
       products.push({
-        productName: query,
+        name: query,
         _id: null,
         category: 'General'
       });
@@ -52,7 +52,7 @@ exports.getAutocompleteResults = async (req, res) => {
 
     // Mapping should be done after fallback
     const mappedResults = products.map(product => ({
-      name: product.productName,
+      name: product.name,
       id: product._id,
       category: product.category || 'General'
     }));
