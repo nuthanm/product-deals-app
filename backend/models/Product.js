@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ProductSchema = new mongoose.Schema({
-  productName: {
+  name: {
     type: String,
     required: true,
     trim: true
@@ -17,6 +17,6 @@ const ProductSchema = new mongoose.Schema({
 });
 
 // Create text index for search
-ProductSchema.index({ productName: 'text' });
+ProductSchema.index({ name: 'text' });
 
 module.exports = mongoose.model('Product', ProductSchema);
