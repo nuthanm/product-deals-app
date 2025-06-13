@@ -157,9 +157,7 @@ exports.getProductDeals = async (req, res) => {
  */
 async function fetchDealsFromSerpAPI(name) {
   try {
-    const apiKey = process.env.SERPAPI_KEY;
-    //Todo: Remove this console log in production
-    console.log('SerpAPI Key:', apiKey);
+    const apiKey = process.env.SERPAPI_KEY;    
     console.log('Product Name:', name);
 
     if (!apiKey) {
@@ -185,7 +183,12 @@ async function fetchDealsFromSerpAPI(name) {
     return response.data.shopping_results.filter(item => {
       // Filter by specific sources
       const allowedSources = process.env.ALLOWED_SOURCES; // Add your desired source names here
-      return allowedSources.includes(item.source);
+      // Old one
+      //return allowedSources.includes(item.source);
+
+      // Change: Ignore the case-sensitivty on allowed sources and "some " function checks if it matches any of the source value we configured.
+      return allowedSources.some(source =>
+        item.source.toLowerCase().includes(source));
     }).map(item => ({
       title: item.title,
       link: item.product_link || item.link,
