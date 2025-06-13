@@ -184,11 +184,11 @@ async function fetchDealsFromSerpAPI(name) {
       // Filter by specific sources
       const allowedSources = process.env.ALLOWED_SOURCES; // Add your desired source names here
       // Old one
-      //return allowedSources.includes(item.source);
+      return allowedSources.includes(item.source);
 
-      // Change: Ignore the case-sensitivty on allowed sources and "some " function checks if it matches any of the source value we configured.
-      return allowedSources.some(source =>
-        item.source.toLowerCase().includes(source));
+      // TOdo: Change: Ignore the case-sensitivty on allowed sources and "some " function checks if it matches any of the source value we configured.
+      //return allowedSources.some(source =>
+        //item.source.toLowerCase().includes(source));
     }).map(item => ({
       title: item.title,
       link: item.product_link || item.link,
