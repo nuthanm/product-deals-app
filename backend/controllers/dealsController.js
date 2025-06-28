@@ -173,7 +173,7 @@ async function fetchDealsFromSerpAPI(name) {
       gl: 'au',
       direct_link: true,
       device: 'desktop',
-      uule: 3030
+      uule: 3030,
     };
     
     const response = await axios.get('https://serpapi.com/search', { params });
