@@ -127,9 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
           const currentStart = paginationTracker[productName] || 10;
 
           try {
-              const response = await axios.post(`/api/deals?start=${currentStart}`, {
+              const response = await axios.post(`${API_BASE_URL}/deals?start=${currentStart}`, {
                   products: [{ name: productName }]
-              });
+            });
 
              const newDeals = response.data[0]?.deals || [];
              paginationTracker[productName] = currentStart + newDeals.length;
