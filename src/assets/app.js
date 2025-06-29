@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Call API - Fetch always starts with 0
             const response = await axios.post(`${API_BASE_URL}/deals?start=0`, {
-                  products: [{ name: productName }]
+                  products
             });
 
             // Hide loading
