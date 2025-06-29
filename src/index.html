@@ -29,7 +29,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8">
         <!-- Search Section -->
         <section class="search-container rounded-lg p-6 mb-8 text-white">
             <h2 class="text-2xl font-bold mb-4">Find the Best Deals for Multiple Products</h2>
@@ -41,9 +41,7 @@
                 <button id="add-to-list" class="absolute right-2 top-2 bg-indigo-700 text-white p-2 rounded-lg hover:bg-indigo-800 transition"
                     title="You can only add up to 5 products." >
                     <i class="fas fa-plus mr-1"></i> Add to List
-                </button>
-
-                
+                </button>                
                 <!-- Autocomplete Dropdown -->
                 <div id="autocomplete-results" class="autocomplete-container hidden absolute z-10 w-full bg-white mt-1 rounded-lg shadow-lg border border-gray-200">
                     <!-- Autocomplete items will be added here dynamically -->
@@ -88,7 +86,37 @@
                 <!-- Recent searches will be added here dynamically -->
             </div>
         </section>
+          <!-- Usage Policies Section -->
+    <section id="usage-policies" class="bg-gray-50 py-12">
+        <div class="container mx-auto px-4">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Usage Policies</h2>
+            
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="prose max-w-none">
+                    <h3>Terms of Use</h3>
+                    <p>By using the Product Deals Finder application, you agree to comply with these terms and all applicable laws and regulations.</p>
+                    
+                    <h3>Data Usage</h3>
+                    <p>We store your search history to improve your experience and provide the recent searches feature. This data is not shared with third parties.</p>
+                    
+                    <h3>API Usage</h3>
+                    <p>This application uses SerpAPI to fetch product deals. All searches are subject to SerpAPI's terms of service.</p>
+                    
+                    <h3>Limitations</h3>
+                    <p>Users can search for a maximum of 5 products at once. Results are cached for 24 hours to improve performance.</p>
+                    
+                    <h3>Privacy</h3>
+                    <p>We do not collect personal information beyond what is necessary for the application to function. For more details, please see our Privacy Policy.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
     </main>
+
+    
+      <!-- ✅ This spacer is only used if content above is short -->
+      <div class="flex-grow"></div>
     
     <!-- Error Toast Notification (hidden by default) -->
     <div id="error-toast" class="hidden fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg animate-shake max-w-md z-50">
@@ -120,32 +148,7 @@
         </div>
     </div>
     
-    <!-- Usage Policies Section -->
-    <section id="usage-policies" class="bg-gray-50 py-12">
-        <div class="container mx-auto px-4">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Usage Policies</h2>
-            
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <div class="prose max-w-none">
-                    <h3>Terms of Use</h3>
-                    <p>By using the Product Deals Finder application, you agree to comply with these terms and all applicable laws and regulations.</p>
-                    
-                    <h3>Data Usage</h3>
-                    <p>We store your search history to improve your experience and provide the recent searches feature. This data is not shared with third parties.</p>
-                    
-                    <h3>API Usage</h3>
-                    <p>This application uses SerpAPI to fetch product deals. All searches are subject to SerpAPI's terms of service.</p>
-                    
-                    <h3>Limitations</h3>
-                    <p>Users can search for a maximum of 5 products at once. Results are cached for 24 hours to improve performance.</p>
-                    
-                    <h3>Privacy</h3>
-                    <p>We do not collect personal information beyond what is necessary for the application to function. For more details, please see our Privacy Policy.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
+  
     <!-- Footer -->
     <footer class="bg-gray-800 text-white py-8">
         <div class="container mx-auto px-4">
