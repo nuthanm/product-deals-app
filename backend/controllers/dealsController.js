@@ -187,7 +187,11 @@ async function fetchDealsFromSerpAPI(name, start = 0) {
     }
 
     // With no filtering
-    const results = response.data?.shopping_results;
+    let results = response.data?.shopping_results || [];
+    console.log('Actual Received from SerpAPI:', results.length, 'items');
+    // ✅ Trim manually to enforce pagination
+    results = results.slice(0, 10);  
+    console.log('Sliced result received from SerpAPI:', results.length, 'items');
     /*
     const results = (response.data?.shopping_results || []).filter(item => {
       const source = (item.source || '').toLowerCase();
