@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   `).join('');
                    grid.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
                 } else {
-                     // showError('No more results found.'); // ✅ Changed from alert to toaster
+                     showError('No more results found.'); // ✅ Changed from alert to toaster
                      // Hide Load More button and add tooltip                    
                     const loadMoreBtn = sectionElement.querySelector('button');
                     if (loadMoreBtn) {
