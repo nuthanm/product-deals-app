@@ -170,7 +170,7 @@ async function fetchDealsFromSerpAPI(name, start = 0) {
       gl: 'au',
       tdm: 'shop',
       start,
-      num: 20, // fetch more and let UI slice if needed
+      num: 10, // fetch more 10 results per request
       direct_link: true,
     };
 
