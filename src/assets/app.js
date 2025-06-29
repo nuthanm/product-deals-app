@@ -352,16 +352,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayDeals(dealsData) {
     dealsContainer.innerHTML = '';
 
-    if (!dealsData || dealsData.length === 0) {
+    if (!dealsData || dealsData.length === 0 || dealsData.every(d => !d.deals || d.deals.length === 0)) {
         dealsContainer.innerHTML = `
             <div class="text-center py-8 text-gray-500">
                 <i class="fas fa-search text-4xl mb-3 opacity-30"></i>
-                <p>No deals found for your products. Try different products or check back later.</p>
+                <p>No deals found for your selected products. You can try different terms or check back later.</p>
             </div>
         `;
         dealsResults.classList.remove('hidden');
         return;
     }
+
+
 
     dealsData.forEach(productDeals => {
         const productSection = document.createElement('div');
