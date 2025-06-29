@@ -300,9 +300,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 name: p.name
             }));
             
-            // Call API
-            const response = await axios.post(`${API_BASE_URL}/deals`, { products });
-            
+            // Call API            
+            const response = await axios.post(`${API_BASE_URL}/deals?start=${currentStart}`, {
+                  products: [{ name: productName }]
+            });
+
             // Hide loading
             hideLoading();
             getDealsBtn.disabled = false;
