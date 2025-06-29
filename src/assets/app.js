@@ -166,7 +166,12 @@ document.addEventListener('DOMContentLoaded', function() {
                      // Hide Load More button and add tooltip                    
                     const loadMoreBtn = sectionElement.querySelector('button');
                     if (loadMoreBtn) {
-                        loadMoreBtn.remove();
+                        loadMoreBtn.classList.add('transition-opacity', 'duration-500', 'opacity-0');
+    
+                        // Wait for transition to complete before removing from DOM
+                        setTimeout(() => {
+                            loadMoreBtn.remove();
+                        }, 500); // matches the duration
                     }
                 }
                 } catch (error) {
