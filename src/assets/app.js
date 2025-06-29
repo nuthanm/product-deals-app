@@ -163,14 +163,10 @@ document.addEventListener('DOMContentLoaded', function() {
                    grid.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
                 } else {
                      // showError('No more results found.'); // ✅ Changed from alert to toaster
-                     // Hide Load More button and add tooltip
+                     // Hide Load More button and add tooltip                    
                     const loadMoreBtn = sectionElement.querySelector('button');
                     if (loadMoreBtn) {
-                        loadMoreBtn.disabled = true;
-                        loadMoreBtn.classList.add('cursor-not-allowed', 'bg-gray-400');
-                        loadMoreBtn.classList.remove('hover:bg-indigo-700');
-                        loadMoreBtn.textContent = 'No more results';
-                        loadMoreBtn.setAttribute('title', 'You’ve reached the end of results for this product');
+                        loadMoreBtn.remove();
                     }
                 }
                 } catch (error) {
