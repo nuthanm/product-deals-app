@@ -350,21 +350,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Display deals
     function displayDeals(dealsData) {
+    const dealsResults = document.getElementById('deals-results');
+    const dealsContainer = document.getElementById('deals-container');
+
+    // Clear previous results
     dealsContainer.innerHTML = '';
 
-    if (!dealsData || dealsData.length === 0 || dealsData.every(d => !d.deals || d.deals.length === 0)) {
-        dealsContainer.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-search text-4xl mb-3 opacity-30"></i>
-                <p>No deals found for your selected products. You can try different terms or check back later.</p>
-            </div>
-        `;
-        dealsResults.classList.remove('hidden');
+    // Check if all products have no deals
+    const noDealsFound = !dealsData || dealsData.length === 0 || dealsData.every(d => !d.deals || d.deals.length === 0);
+
+    if (noDealsFound) {
+        dealsResults.classList.add('hidden'); // ❌ Don't show the block at all
         return;
     }
 
-
-
+    // Loop through each product and show results
     dealsData.forEach(productDeals => {
         const productSection = document.createElement('div');
         productSection.className = 'product-deals animate-fade-in';
@@ -398,9 +398,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         } else {
+            // Show product name with no results
             dealsHtml = `
                 <div class="text-center py-4 text-gray-500">
-                    <p>No deals found for this product. Try a different search term.</p>
+                    <p>No deals found for <strong>${productDeals.product.name}</strong>.</p>
                 </div>
             `;
         }
@@ -410,18 +411,21 @@ document.addEventListener('DOMContentLoaded', function() {
             ${dealsHtml}
         `;
 
-        // ✅ Add Load More button INSIDE the loop for each product
-        const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = 'mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
-        loadMoreBtn.textContent = 'Load More';
-        loadMoreBtn.addEventListener('click', () =>
-            loadMoreDeals(productDeals.product.name, productSection)
-        );
+        // Only show "Load More" if there are initial results
+        if (productDeals.deals && productDeals.deals.length > 0) {
+            const loadMoreBtn = document.createElement('button');
+            loadMoreBtn.className = 'mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
+            loadMoreBtn.textContent = 'Load More';
+            loadMoreBtn.addEventListener('click', () =>
+                loadMoreDeals(productDeals.product.name, productSection)
+            );
+            productSection.appendChild(loadMoreBtn);
+        }
 
-        productSection.appendChild(loadMoreBtn);
         dealsContainer.appendChild(productSection);
     });
 
+    // ✅ Now finally show the container only if there was something to show
     dealsResults.classList.remove('hidden');
 }
 
