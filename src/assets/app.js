@@ -284,11 +284,28 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add remove event listener
             const removeBtn = productItem.querySelector('button');
-            removeBtn.addEventListener('click', function() {
+            removeBtn.addEventListener('click', function () {
                 const index = parseInt(this.getAttribute('data-index'));
+                const removedProduct = productList[index].name.toLowerCase();
+
+                // Remove product from list
                 productList.splice(index, 1);
                 updateProductList();
+
+                // Remove corresponding section from deals grid if it exists
+                const dealSections = dealsContainer.querySelectorAll('.product-deals');
+                dealSections.forEach(section => {
+                    const heading = section.querySelector('h4');
+                    if (heading && heading.textContent.trim().toLowerCase() === removedProduct) {
+                        section.remove();
+                    }
             });
+
+            // Hide entire deals-results section if no sections are left
+            if (dealsContainer.querySelectorAll('.product-deals').length === 0) {
+                dealsResults.classList.add('hidden');
+            }
+        });
             
             selectedProducts.appendChild(productItem);
         });
