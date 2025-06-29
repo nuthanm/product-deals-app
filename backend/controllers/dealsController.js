@@ -179,6 +179,13 @@ async function fetchDealsFromSerpAPI(name, start = 0) {
       return [];
     }
 
+    let allowedSources = [];
+    try {
+          allowedSources = JSON.parse(process.env.ALLOWED_SOURCES || '[]');
+    } catch (e) {
+          console.error('Failed to parse ALLOWED_SOURCES:', e);
+    }
+
     const results = (response.data?.shopping_results || []).filter(item => {
       const source = (item.source || '').toLowerCase();
       const link = (item.product_link || item.link || '').toLowerCase();
