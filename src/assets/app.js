@@ -125,6 +125,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadMoreDeals(productName, sectionElement) {
           const currentStart = paginationTracker[productName] || 10;
+          const loadMoreBtn = sectionElement.querySelector('button');
+
+           // Show loading state
+           loadMoreBtn.disabled = true;
+           loadMoreBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Loading...`;
 
           try {
               const response = await axios.post(`${API_BASE_URL}/deals?start=${currentStart}`, {
@@ -155,13 +160,19 @@ document.addEventListener('DOMContentLoaded', function() {
                           </div>
                        </a>
                   `).join('');
+                   grid.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
                 } else {
-                  alert('No more results found.');
+                     showError('No more results found.'); // ✅ Changed from alert to toaster
                 }
                 } catch (error) {
                     console.error('Load more error:', error);
                     showError('Failed to load more deals.');
                 }
+                finally {
+                        // Reset button state
+                        loadMoreBtn.disabled = false;
+                        loadMoreBtn.innerHTML = `Load More`;
+               }
         }
     
     // Display autocomplete results
