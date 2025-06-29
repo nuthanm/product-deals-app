@@ -103,12 +103,10 @@ exports.getProductDeals = async (req, res) => {
     // }
     
     // Otherwise, fetch from SerpAPI
+    const start = parseInt(req.query.start || '0');
     const productDeals = await Promise.all(validProductDocs.map(async (product) => {
       try {
-        console.log('product Name before SerpAPI:', product.name);
-        const deals = await fetchDealsFromSerpAPI(product.name);
-        //Todo: Remove this console log in production
-        
+        const deals = await fetchDealsFromSerpAPI(product.name, start);        
         return {
           product: {
             id: product.id,
@@ -153,13 +151,12 @@ exports.getProductDeals = async (req, res) => {
 };
 
 /**
- * Fetch deals from SerpAPI
+ * Fetch deals from SerpAPI supports pagination
  */
-async function fetchDealsFromSerpAPI(name) {
+async function fetchDealsFromSerpAPI(name, start = 0) {
   try {
     const apiKey = process.env.SERPAPI_KEY;    
-    console.log('Product Name:', name);
-
+    
     if (!apiKey) {
       throw new Error('SERPAPI_KEY is not defined in environment variables');
     }
@@ -171,30 +168,24 @@ async function fetchDealsFromSerpAPI(name) {
       google_domain: 'google.com.au',
       hl: 'en',
       gl: 'au',
+      tdm: 'shop',
+      start,
+      num: 20, // fetch more and let UI slice if needed
       direct_link: true,
-      device: 'desktop',
-      uule: 3030,
     };
-    
+
     const response = await axios.get('https://serpapi.com/search', { params });
-    console.log('SerpAPI response:', response.data);
     if (!response.data || !response.data.shopping_results) {
       return [];
     }
-    
-    // Process and return the deals
-    return response.data.shopping_results.filter(item => {
-      //const itemSource = (item.source || '').toLowerCase();
-      // Filter by specific sources
-      const allowedSources = process.env.ALLOWED_SOURCES; // Add your desired source names here
-      // Old one
-      return allowedSources.includes(item.source);
-      // return allowedSources.some(source => itemSource.includes(source));
 
-      // TOdo: Change: Ignore the case-sensitivty on allowed sources and "some " function checks if it matches any of the source value we configured.
-      //return allowedSources.some(source =>
-        //item.source.toLowerCase().includes(source));
-    }).map(item => ({
+    const results = (response.data?.shopping_results || []).filter(item => {
+      const source = (item.source || '').toLowerCase();
+      const link = (item.product_link || item.link || '').toLowerCase();
+      return allowedSources.some(s => source.includes(s) || link.includes(s));
+    });
+
+    return results.map(item => ({
       title: item.title,
       link: item.product_link || item.link,
       image: item.thumbnail,
@@ -202,10 +193,10 @@ async function fetchDealsFromSerpAPI(name) {
       source: item.source,
       rating: item.rating,
       reviews: item.reviews,
-      shipping: item.shipping
-    })).slice(0, 10); // Limit to 10 deals per product
+      shipping: item.shipping,
+    }));
   } catch (error) {
     console.error('SerpAPI error:', error);
-    throw error;
+    return [];
   }
 }
