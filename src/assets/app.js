@@ -230,10 +230,12 @@ document.addEventListener('DOMContentLoaded', function() {
             addToListBtn.disabled = true;
             addToListBtn.classList.add('bg-gray-400');
             addToListBtn.classList.remove('bg-indigo-700', 'hover:bg-indigo-800');
+            addToListBtn.setAttribute('title', 'You can only add up to 5 products.');
         } else {
             addToListBtn.disabled = false;
             addToListBtn.classList.remove('bg-gray-400');
             addToListBtn.classList.add('bg-indigo-700', 'hover:bg-indigo-800');
+            addToListBtn.removeAttribute('title');
         }
     }
     
