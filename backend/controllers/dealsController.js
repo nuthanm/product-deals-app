@@ -186,12 +186,15 @@ async function fetchDealsFromSerpAPI(name, start = 0) {
           console.error('Failed to parse ALLOWED_SOURCES:', e);
     }
 
+    // With no filtering
+    const results = response.data?.shopping_results;
+    /*
     const results = (response.data?.shopping_results || []).filter(item => {
       const source = (item.source || '').toLowerCase();
       const link = (item.product_link || item.link || '').toLowerCase();
       return allowedSources.some(s => source.includes(s) || link.includes(s));
     });
-
+    */
     return results.map(item => ({
       title: item.title,
       link: item.product_link || item.link,
