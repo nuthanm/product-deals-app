@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearHistoryBtn = document.getElementById('clear-history');
     
     // Variables
+    let paginationTracker = {}; // track start index per product
     let productList = [];
     let typingTimer;
     const MAX_PRODUCTS = 5;
@@ -115,6 +116,47 @@ document.addEventListener('DOMContentLoaded', function() {
         // Don't show error for autocomplete - it's too disruptive
         // showError('Failed to fetch product suggestions. Please try again.');
     }
+}
+
+    async function loadMoreDeals(productName, sectionElement) {
+  const currentStart = paginationTracker[productName] || 10;
+
+  try {
+    const response = await axios.post(`/api/deals?start=${currentStart}`, {
+      products: [{ name: productName }]
+    });
+
+    const newDeals = response.data[0]?.deals || [];
+    paginationTracker[productName] = currentStart + newDeals.length;
+
+    if (newDeals.length > 0) {
+      const grid = sectionElement.querySelector('.grid');
+      grid.innerHTML += newDeals.map(deal => `
+        <a href="${deal.link}" target="_blank" class="product-item block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-indigo-300">
+          <div class="h-48 bg-gray-100 flex items-center justify-center">
+            <img src="${deal.image || './assets/placeholder.png'}" alt="${deal.title}" class="max-h-full max-w-full object-contain">
+          </div>
+          <div class="p-4">
+            <div class="flex items-center mb-2">
+              <div class="text-yellow-400 flex">${generateStarRating(deal.rating || 0)}</div>
+              <span class="text-sm text-gray-600 ml-1">${deal.rating || '0'} ${deal.reviews ? `(${deal.reviews} reviews)` : ''}</span>
+            </div>
+            <h5 class="font-medium text-gray-800 mb-1">${deal.title}</h5>
+            <p class="text-gray-500 text-sm mb-2">${deal.source || 'Online Store'}</p>
+            <div class="flex justify-between items-center">
+              <span class="text-lg font-bold text-indigo-600">${deal.price || 'Price unavailable'}</span>
+              <span class="text-sm text-green-600">${deal.shipping || ''}</span>
+            </div>
+          </div>
+        </a>
+      `).join('');
+    } else {
+      alert('No more results found.');
+    }
+  } catch (error) {
+    console.error('Load more error:', error);
+    showError('Failed to load more deals.');
+  }
 }
     
     // Display autocomplete results
@@ -350,7 +392,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             dealsContainer.appendChild(productSection);
         });
-        
+
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.className = 'mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
+        loadMoreBtn.textContent = 'Load More';
+        loadMoreBtn.addEventListener('click', () => loadMoreDeals(productDeals.product.name, productSection));
+        productSection.appendChild(loadMoreBtn);        
         dealsResults.classList.remove('hidden');
     }
     
