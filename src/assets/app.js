@@ -27,10 +27,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const TYPING_INTERVAL = 300; // ms
     //const API_BASE_URL = '/api'; // Will be replaced with actual API URL in production
 //    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
-    const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000';
+    // const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000';
+    const API_BASE_URL = window.API_BASE_URL || 'https://product-deals-app-production.up.railway.app/api';
+    console.log(window.API_BASE_URL);
+    console.log("API BASE URL value", API_BASE_URL);
 
+    if (!window.API_BASE_URL) {
+        console.warn("window.API_BASE_URL is not set — using default fallback!");
+    }
 
-    
     // Initialize
     init();
     
