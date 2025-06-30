@@ -166,6 +166,16 @@ document.addEventListener('DOMContentLoaded', function() {
                           </div>
                        </a>
                   `).join('');
+                   // 👇 Only show Load More if at least 10 items came back
+                    if (newDeals.length === 10) {
+                        const loadMoreBtn = document.createElement('button');
+                        loadMoreBtn.className = 'mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
+                        loadMoreBtn.textContent = 'Load More';
+                        loadMoreBtn.addEventListener('click', () =>
+                            loadMoreDeals(productDeals.product.name, sectionElement)
+                        );
+                        sectionElement.appendChild(loadMoreBtn);
+                    }
                    grid.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
                 } else {
                      showError('No more results found.'); // ✅ Changed from alert to toaster

@@ -4,9 +4,6 @@ const ProductHistory = require('../models/ProductHistory');
 const ProductResponse = require('../models/ProductResponse');
 const { filterByAllowedSources } = require('../utils/sourceFilter');
 
-/**
- * Normalize a source name to key in SOURCE_UPDATE_DAYS
- */
 function normalizeSourceName(source) {
   const s = source.toLowerCase();
   if (s.includes('coles')) return 'coles';
@@ -58,73 +55,67 @@ exports.getProductDeals = async (req, res) => {
         expiresAt: { $gt: new Date() }
       });
 
-      const freshDeals = [];
-      let needsUpdate = true;
-
-      if (existing) {
-        const productEntry = existing.products.find(p => p.product.toString() === product._id.toString());
-        const storedDeals = productEntry?.deals || [];
-
-        needsUpdate = storedDeals.some(deal => {
-          const normalizedSource = normalizeSourceName(deal.source || '');
-          const updateDay = sourceUpdateDays[normalizedSource];
-
-          if (!updateDay || !deal.fetchedAt) return true;
-
-          const fetched = new Date(deal.fetchedAt);
-          const now = new Date();
-          const ageInDays = (now - fetched) / (1000 * 60 * 60 * 24);
-          return ageInDays > 6;
-        });
-
-        if (!needsUpdate && storedDeals.length > 0) {
-          productDeals.push({
-            product: { id: product._id, name: product.name },
-            deals: storedDeals,
-            source: 'db'
-          });
-          continue;
-        }
-      }
-
-      const deals = await fetchDealsFromSerpAPI(product.name, start);
-      const timestampedDeals = deals.map(d => ({ ...d, fetchedAt: new Date() }));
+      const dealsFromAPI = await fetchDealsFromSerpAPI(product.name, start);
+      const timestampedDeals = dealsFromAPI.map(d => ({ ...d, fetchedAt: new Date() }));
 
       if (existing) {
         const productEntry = existing.products.find(p => p.product.toString() === product._id.toString());
         const existingDeals = productEntry?.deals || [];
 
-        const mergedDeals = [...existingDeals];
+        const MAX_VALID_DAYS = 6;
 
-        timestampedDeals.forEach(newDeal => {
-          const alreadyExists = existingDeals.some(ed => ed.title === newDeal.title || ed.link === newDeal.link);
-          if (!alreadyExists) mergedDeals.push(newDeal);
+        const isFresh = existingDeals.every(deal => {
+          const normalizedSource = normalizeSourceName(deal.source || '');
+          const updateDay = sourceUpdateDays[normalizedSource];
+
+          if (!updateDay || !deal.fetchedAt) return false;
+
+          const fetched = new Date(deal.fetchedAt);
+          const now = new Date();
+          const ageInDays = (now - fetched) / (1000 * 60 * 60 * 24);
+          return ageInDays <= MAX_VALID_DAYS;
         });
 
-        productEntry.deals = mergedDeals;
-        await existing.save();
+        const newDeals = timestampedDeals.filter(newDeal =>
+          !existingDeals.some(existing => existing.title === newDeal.title || existing.link === newDeal.link)
+        );
 
-        productDeals.push({
-          product: { id: product._id, name: product.name },
-          deals: mergedDeals,
-          source: 'db'
-        });
-      } else {
-        await ProductResponse.create({
-          productHistory: productHistory._id,
-          products: [{
-            product: product._id,
-            productName: product.name,
-            deals: timestampedDeals
-          }]
-        });
+        if (newDeals.length > 0) {
+          productEntry.deals.push(...newDeals);
+          await existing.save();
+        }
 
-        productDeals.push({
-          product: { id: product._id, name: product.name },
-          deals: timestampedDeals,
-          source: 'api'
-        });
+        if (isFresh && start === 0) {
+          productDeals.push({
+            product: { id: product._id, name: product.name },
+            deals: productEntry.deals,
+            source: 'db'
+          });
+          continue;
+        } else {
+          productDeals.push({
+            product: { id: product._id, name: product.name },
+            deals: productEntry.deals,
+            source: 'api'
+          });
+          continue;
+        }
       }
+
+      await ProductResponse.create({
+        productHistory: productHistory._id,
+        products: [{
+          product: product._id,
+          productName: product.name,
+          deals: timestampedDeals
+        }]
+      });
+
+      productDeals.push({
+        product: { id: product._id, name: product.name },
+        deals: timestampedDeals,
+        source: 'api'
+      });
     }
 
     res.json(productDeals);
