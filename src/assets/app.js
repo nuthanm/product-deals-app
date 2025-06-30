@@ -133,13 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const currentStart = paginationTracker[productName] || 10;
 
   try {
-    // Show loading state on the button (if exists)
-    const loadMoreBtn = sectionElement.querySelector('.load-more-button');
-    if (loadMoreBtn) {
-      loadMoreBtn.disabled = true;
-      loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading...';
-    }
-
     const response = await axios.post(`${API_BASE_URL}/deals?start=${currentStart}`, {
       products: [{ name: productName }]
     });
@@ -147,36 +140,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const newDeals = response.data[0]?.deals || [];
     paginationTracker[productName] = currentStart + newDeals.length;
 
-    // Append new deals
-    if (newDeals.length > 0) {
-      const grid = sectionElement.querySelector('.grid');
-      grid.innerHTML += newDeals.map(deal => buildDealCard(deal)).join('');
+    const grid = sectionElement.querySelector('.grid');
+
+    // If no new deals
+    if (newDeals.length === 0) {
+      // Remove Load More button if present
+      const loadMoreBtn = sectionElement.querySelector('.load-more-button');
+      if (loadMoreBtn) loadMoreBtn.remove();
+
+      // Show no-more-results message (once)
+      if (!sectionElement.querySelector('.no-more-message')) {
+        const message = document.createElement('div');
+        message.className = 'no-more-message animate-fade-in text-center text-sm text-indigo-500 mt-4 italic';
+        message.innerHTML = `<i class="fas fa-info-circle mr-1"></i> No more results found.`;
+        sectionElement.appendChild(message);
+      }
+
+      return;
     }
-    
-    if (loadMoreBtn) loadMoreBtn.remove();
 
-// Show Load More if exactly 10 new items
-if (newDeals.length === 10) {
-  const newBtn = document.createElement('button');
-  newBtn.className = 'load-more-button mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
-  newBtn.textContent = 'Load More';
-  newBtn.addEventListener('click', () =>
-    loadMoreDeals(productName, sectionElement)
-  );
-  sectionElement.appendChild(newBtn);
-} else {
-  // 👇 Append no-more-results message
-  const message = document.createElement('div');
-  message.className = 'text-center text-sm text-gray-500 mt-4';
-  message.textContent = 'No more results found.';
-  sectionElement.appendChild(message);
-}
+    // Append new deals
+    grid.innerHTML += newDeals.map(deal => buildDealCard(deal)).join('');
 
+    // Remove any existing Load More button
+    const oldLoadMoreBtn = sectionElement.querySelector('.load-more-button');
+    if (oldLoadMoreBtn) oldLoadMoreBtn.remove();
+
+    // Add Load More button only if exactly 10 results returned
+    if (newDeals.length === 10) {
+      const loadMoreBtn = document.createElement('button');
+      loadMoreBtn.className = 'load-more-button mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
+      loadMoreBtn.textContent = 'Load More';
+      loadMoreBtn.addEventListener('click', () =>
+        loadMoreDeals(productName, sectionElement)
+      );
+      sectionElement.appendChild(loadMoreBtn);
+    }
   } catch (error) {
     console.error('Load more error:', error);
     showError('Failed to load more deals.');
   }
 }
+
 
 function buildDealCard(deal) {
   return `
