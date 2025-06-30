@@ -68,10 +68,10 @@ exports.getProductDeals = async (req, res) => {
       return res.status(400).json({ message: 'No valid products found' });
     }
     
-    // Todo: Create product history entry
-    // const productHistory = await ProductHistory.create({
-    //   products: validProductDocs.map(p => p.id)
-    // });
+    const productHistory = await ProductHistory.create({
+        products: validProductDocs.map(p => p._id)
+   });
+
     
     const productDeals = [];
 
@@ -80,8 +80,11 @@ exports.getProductDeals = async (req, res) => {
         let needsUpdate = true;
       
         let existing = await ProductResponse.findOne({
-           'products.product': product._id
-        });
+            'products.product': product._id,
+            'products.deals': { $exists: true, $ne: [] },
+            expiresAt: { $gt: new Date() } // ensures not expired
+      });
+
 
        if (existing) {
            const storedDeals = existing.products.find(p => p.product.toString() === product._id.toString())?.deals || [];
@@ -92,9 +95,17 @@ exports.getProductDeals = async (req, res) => {
 
               if (!updateDay || !deal.fetchedAt) return true;
 
-              const dealDate = new Date(deal.fetchedAt);
-              return dealDate.getDay() < updateDay || todayDay > updateDay + 1;
-         });
+              const fetched = new Date(deal.fetchedAt);
+              const now = new Date();
+
+              // Compare full dates, not just days
+              const msSinceFetch = now - fetched;
+              const daysSinceFetch = msSinceFetch / (1000 * 60 * 60 * 24);
+
+              // Allow a 7-day freshness window or until next update day
+              return daysSinceFetch >= 7 || fetched.getDay() < updateDay;
+        });
+
 
           if (!needsUpdate) {
              productDeals.push({
@@ -113,6 +124,7 @@ exports.getProductDeals = async (req, res) => {
         const timestampedDeals = deals.map(d => ({ ...d, fetchedAt: new Date() }));
 
         await ProductResponse.create({
+            productHistory: productHistory._id,
             products: [{
               product: product._id,
               productName: product.name,

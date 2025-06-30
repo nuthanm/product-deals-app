@@ -4,7 +4,7 @@ const ProductResponseSchema = new mongoose.Schema({
   productHistory: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ProductHistory',
-    required: false // 🆕 Made this field optional
+    required: true
   },
   products: [{
     product: {
