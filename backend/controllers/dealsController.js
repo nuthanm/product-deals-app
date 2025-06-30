@@ -27,127 +27,108 @@ if (process.env.REDIS_ENABLED === 'true') {
  */
 exports.getProductDeals = async (req, res) => {
   try {
+    
     const { products } = req.body;
-    //Todo: Remove this console log in production
-    console.log('Received products:', products);
+    const start = parseInt(req.query.start || '0');
+    
+    // Validate products array
     if (!products || !Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ message: 'Products array is required' });
     }
     
+    // Limit to maximum 5 products
     if (products.length > 5) {
       return res.status(400).json({ message: 'Maximum 5 products allowed' });
     }
     
+    // Parse SOURCE_UPDATE_DAYS from environment variable
+    // This should be a JSON string like '{"coles": 3, "woolworths": 5}'
+    let sourceUpdateDays = {};
+    try {
+      sourceUpdateDays = JSON.parse(process.env.SOURCE_UPDATE_DAYS || '{}');
+    } catch (err) {
+      console.error("❌ Failed to parse SOURCE_UPDATE_DAYS from env:", err);
+    }
+
     // Create or find products in database
+    const today = new Date();
+    const todayDay = today.getDay();
+
     const productDocs = await Promise.all(products.map(async (product) => {
-      if (product.id) {
-        // Check if product exists by ID
-        console.log('Product ID:', product.id);
-        return await Product.findById(product.id);
-      } else {
-        // Check if product exists by name
-        let existingProduct = await Product.findOne({ 
-          name: { $regex: new RegExp(`^${product.name}$`, 'i') }
-        });
-        
-        if (!existingProduct) {
-          existingProduct = await Product.create({
-            name: product.name,
-            category: 'General'
-          });
-        }
-        
-        return existingProduct;
-      }
+      if (product.id) return await Product.findById(product.id);
+
+      let existing = await Product.findOne({ name: new RegExp(`^${product.name}$`, 'i') });
+      return existing || await Product.create({ name: product.name, category: 'General' });
     }));
     
     // Filter out any null values
     const validProductDocs = productDocs.filter(p => p);
-    //Todo: Remove this console log in production
-    console.log('Valid product documents:', validProductDocs);
+    
     if (validProductDocs.length === 0) {
       return res.status(400).json({ message: 'No valid products found' });
     }
     
-    // Create product history entry
+    // Todo: Create product history entry
     // const productHistory = await ProductHistory.create({
     //   products: validProductDocs.map(p => p.id)
     // });
     
-    // Generate cache key based on sorted product IDs
-    const productIds = validProductDocs.map(p => p._id.toString()).sort().join('-');
-    //Todo: Remove this console log in production
-    console.log('Product IDs:', productIds);
-    // const cacheKey = `deals:${productIds}`;
-    
-    // // Check cache first
-    // let cachedResponse = null;
-    // if (redisClient && redisClient.isReady) {
-    //   const cachedData = await redisClient.get(cacheKey);
-    //   if (cachedData) {
-    //     cachedResponse = JSON.parse(cachedData);
-    //   }
-    // }
-    
-    // // Check database cache if Redis cache not found
-    // if (!cachedResponse) {
-    //   const existingResponse = await ProductResponse.findOne({
-    //     'products.product': { $all: validProductDocs.map(p => p.id) },
-    //     expiresAt: { $gt: new Date() }
-    //   }).populate('products.product');
+    const productDeals = [];
+
+    for (const product of validProductDocs) 
+    {
+        let needsUpdate = true;
       
-    //   if (existingResponse) {
-    //     cachedResponse = existingResponse.products;
-    //   }
-    // }
-    
-    // // If cached response exists, return it
-    // if (cachedResponse) {
-    //   return res.json(cachedResponse);
-    // }
-    
-    // Otherwise, fetch from SerpAPI
-    const start = parseInt(req.query.start || '0');
-    const productDeals = await Promise.all(validProductDocs.map(async (product) => {
-      try {
-        const deals = await fetchDealsFromSerpAPI(product.name, start);        
-        return {
-          product: {
-            id: product.id,
-            name: product.name
-          },
-          deals
-        };
-      } catch (error) {
-        console.error(`Error fetching deals for ${product.name}:`, error);
-        return {
-          product: {
-            id: product.id,
-            name: product.name
-          },
-          deals: []
-        };
-      }
-    }));
-    
-    // Save response to database
-    // const productResponse = await ProductResponse.create({
-    //   productHistory: productHistory.id,
-    //   products: productDeals.map(pd => ({
-    //     product: pd.product.id,
-    //     name: pd.product.name,
-    //     deals: pd.deals
-    //   }))
-    // });
-    
-    // Cache in Redis if enabled
-    if (redisClient && redisClient.isReady) {
-      await redisClient.set(cacheKey, JSON.stringify(productDeals), {
-        EX: 86400 // 24 hours
+        let existing = await ProductResponse.findOne({
+           'products.product': product._id
+        });
+
+       if (existing) {
+           const storedDeals = existing.products.find(p => p.product.toString() === product._id.toString())?.deals || [];
+
+           needsUpdate = storedDeals.some(deal => {
+              const source = (deal.source || '').toLowerCase();
+              const updateDay = sourceUpdateDays[source];
+
+              if (!updateDay || !deal.fetchedAt) return true;
+
+              const dealDate = new Date(deal.fetchedAt);
+              return dealDate.getDay() < updateDay || todayDay > updateDay + 1;
+         });
+
+          if (!needsUpdate) {
+             productDeals.push({
+               product: { id: product._id, name: product.name },
+               deals: storedDeals,
+               source: 'db'
+            });
+            continue;
+         }
+
+            // Remove stale data
+           await ProductResponse.deleteOne({ _id: existing._id });
+        }
+        // Fetch fresh deals
+        const deals = await fetchDealsFromSerpAPI(product.name, start);
+        const timestampedDeals = deals.map(d => ({ ...d, fetchedAt: new Date() }));
+
+        await ProductResponse.create({
+            productHistory: productHistory._id,
+            products: [{
+              product: product._id,
+              productName: product.name,
+              deals: timestampedDeals
+            }]
       });
-    }
-    
+
+          productDeals.push({
+            product: { id: product._id, name: product.name },
+            deals: timestampedDeals,
+            source: 'api'
+          });
+      }      
     res.json(productDeals);
+
   } catch (error) {
     console.error('Error in getProductDeals:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

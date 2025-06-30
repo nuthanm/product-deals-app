@@ -20,7 +20,9 @@ const ProductResponseSchema = new mongoose.Schema({
       source: String,
       rating: Number,
       reviews: Number,
-      shipping: String
+      shipping: String,
+      fetchedAt: { type: Date, default: Date.now }  // 🆕 New field to track when we fetched it from Serp API
+
     }]
   }],
   createdAt: {
