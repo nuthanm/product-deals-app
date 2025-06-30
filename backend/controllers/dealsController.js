@@ -85,21 +85,13 @@ exports.getProductDeals = async (req, res) => {
           await existing.save();
         }
 
-        if (isFresh && start === 0) {
-          productDeals.push({
-            product: { id: product._id, name: product.name },
-            deals: productEntry.deals,
-            source: 'db'
-          });
-          continue;
-        } else {
-          productDeals.push({
-            product: { id: product._id, name: product.name },
-            deals: productEntry.deals,
-            source: 'api'
-          });
-          continue;
-        }
+        productDeals.push({
+          product: { id: product._id, name: product.name },
+          deals: productEntry.deals,
+          source: isFresh && start === 0 ? 'db' : 'api'
+        });
+
+        continue;
       }
 
       await ProductResponse.create({
@@ -138,14 +130,18 @@ async function fetchDealsFromSerpAPI(name, start = 0) {
       hl: 'en',
       gl: 'au',
       tdm: 'shop',
-      start,
-      num: 10,
+      start: 0,
+      num: 40,
       direct_link: true,
     };
 
     const response = await axios.get('https://serpapi.com/search', { params });
-    const results = response.data?.shopping_results || [];
-    const filteredResults = filterByAllowedSources(results).slice(0, 10);
+    const rawResults = response.data?.shopping_results || [];
+
+    const paginatedRaw = rawResults.slice(start, start + 10);
+    const filteredResults = filterByAllowedSources(paginatedRaw);
+
+    console.log(`SerpAPI returned ${rawResults.length} total. Returning ${filteredResults.length} after filtering.`);
 
     return filteredResults.map(item => ({
       title: item.title,
