@@ -113,7 +113,6 @@ exports.getProductDeals = async (req, res) => {
         const timestampedDeals = deals.map(d => ({ ...d, fetchedAt: new Date() }));
 
         await ProductResponse.create({
-            productHistory: productHistory._id,
             products: [{
               product: product._id,
               productName: product.name,
