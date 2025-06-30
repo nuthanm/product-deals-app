@@ -91,7 +91,11 @@ exports.getProductDeals = async (req, res) => {
 
            needsUpdate = storedDeals.some(deal => {
               const source = (deal.source || '').toLowerCase();
-              const updateDay = sourceUpdateDays[source];
+              const normalizedSource = source.includes("coles") ? "coles"
+                        : source.includes("woolworths") ? "woolworths"
+                        : null;
+
+              const updateDay = sourceUpdateDays[normalizedSource];
 
               if (!updateDay || !deal.fetchedAt) return true;
 
