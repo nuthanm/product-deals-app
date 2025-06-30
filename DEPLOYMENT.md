@@ -29,7 +29,7 @@ REDIS_ENABLED=true (if using Redis)
 REDIS_URL=your_redis_connection_string (if using Redis)
 ```
 
-### 3. Deploy the Application
+### 3. Deploy the Application - Example we consider here as Heroku
 
 #### For Heroku:
 

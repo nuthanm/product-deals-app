@@ -36,6 +36,8 @@ This document provides detailed instructions for setting up and deploying the Pr
 3. Create a `.env` file based on the provided `.env.example`:
    ```
    cp .env.example .env
+   (or)
+   copy .env.example .env
    ```
 
 4. Edit the `.env` file and update the following variables:
