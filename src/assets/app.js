@@ -677,4 +677,22 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideLoading() {
         loadingOverlay.classList.add('hidden');
     }
+
+    // Move to Top logic
+    const moveToTopBtn = document.getElementById('move-to-top');
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            moveToTopBtn.classList.remove('hidden');
+        } else {
+            moveToTopBtn.classList.add('hidden');
+        }
+    });
+
+    moveToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+    });
+});
 });
