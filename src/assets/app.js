@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const recentSearches = document.getElementById('recent-searches');
     const clearHistoryBtn = document.getElementById('clear-history');
     
+    // Refresh page on click of page logo
+    // This is the title-refresh element that acts as a logo
+    document.getElementById('title-refresh').addEventListener('click', function () {
+        location.reload();
+    });
+
     // Variables
     let paginationTracker = {}; // track start index per product
     let productList = [];
