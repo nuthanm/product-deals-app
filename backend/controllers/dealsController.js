@@ -3,6 +3,10 @@ const Product = require('../models/Product');
 const ProductHistory = require('../models/ProductHistory');
 const ProductResponse = require('../models/ProductResponse');
 const redis = require('redis');
+const {
+  filterByAllowedSources
+} = require('../utils/sourceFilter');
+
 let redisClient;
 
 // Initialize Redis client if enabled
@@ -179,26 +183,17 @@ async function fetchDealsFromSerpAPI(name, start = 0) {
       return [];
     }
 
-    let allowedSources = [];
-    try {
-          allowedSources = JSON.parse(process.env.ALLOWED_SOURCES || '[]');
-    } catch (e) {
-          console.error('Failed to parse ALLOWED_SOURCES:', e);
-    }
-
     // With no filtering
-    let results = response.data?.shopping_results || [];
-    console.log('Actual Received from SerpAPI:', results.length, 'items');
+    let rawResults = response.data?.shopping_results || [];
+    console.log('Actual Received from SerpAPI:', rawResults.length, 'items');
+
+    const filteredResults = filterByAllowedSources(rawResults);
+    console.log(`Filtered results count: ${filteredResults.length}`);
+    
     // ✅ Trim manually to enforce pagination
-    results = results.slice(0, 10);  
+    results = filteredResults.slice(0, 10);  
     console.log('Sliced result received from SerpAPI:', results.length, 'items');
-    /*
-    const results = (response.data?.shopping_results || []).filter(item => {
-      const source = (item.source || '').toLowerCase();
-      const link = (item.product_link || item.link || '').toLowerCase();
-      return allowedSources.some(s => source.includes(s) || link.includes(s));
-    });
-    */
+   
     return results.map(item => ({
       title: item.title,
       link: item.product_link || item.link,
