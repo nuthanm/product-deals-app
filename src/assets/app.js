@@ -31,12 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let typingTimer;
     const MAX_PRODUCTS = 5;
     const TYPING_INTERVAL = 300; // ms
-    //const API_BASE_URL = '/api'; // Will be replaced with actual API URL in production
+    //const API_BASE_URL = 'http://localhost:3000/api'; // Will be replaced with actual API URL in production
 //    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
     // const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000';
     const API_BASE_URL = window.API_BASE_URL || 'https://product-deals-app-production.up.railway.app/api';
-    console.log(window.API_BASE_URL);
-    console.log("API BASE URL value", API_BASE_URL);
+    // console.log(window.API_BASE_URL);
+    //console.log("API BASE URL value", API_BASE_URL);
 
     if (!window.API_BASE_URL) {
         console.warn("window.API_BASE_URL is not set — using default fallback!");
@@ -396,87 +396,228 @@ function buildDealCard(deal) {
         }
     }
     
-    // Display deals
+    // Newer version - Groupin Display deals
+    let cartItems = [];
     function displayDeals(dealsData) {
-    const dealsResults = document.getElementById('deals-results');
-    const dealsContainer = document.getElementById('deals-container');
+  const dealsContainer = document.getElementById('deals-container');
+  dealsContainer.innerHTML = '';
 
-    // Clear previous results
-    dealsContainer.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
 
-    // Check if all products have no deals
-    const noDealsFound = !dealsData || dealsData.length === 0 || dealsData.every(d => !d.deals || d.deals.length === 0);
+  dealsData.forEach(productData => {
+    const grouped = groupByNormalizedTitle(productData.deals);
 
-    if (noDealsFound) {
-        dealsResults.classList.add('hidden'); // ❌ Don't show the block at all
-        return;
-    }
+    Object.entries(grouped).forEach(([groupKey, deals]) => {
+      const section = document.createElement('div');
+      section.className = "product-deals mb-6 p-4 border rounded shadow-sm bg-white";
+      section.setAttribute("data-product", productData.product.name.toLowerCase());
 
-    // Loop through each product and show results
-    dealsData.forEach(productDeals => {
-        const productSection = document.createElement('div');
-        productSection.className = 'product-deals animate-fade-in';
+      const best = findBestValue(deals);
 
-        let dealsHtml = '';
-
-        if (productDeals.deals && productDeals.deals.length > 0) {
-            dealsHtml = `
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    ${productDeals.deals.map(deal => `
-                        <a href="${deal.link}" target="_blank" class="product-item block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-indigo-300">
-                            <div class="h-48 bg-gray-100 flex items-center justify-center">
-                                <img src="${deal.image || './assets/placeholder.png'}" alt="${deal.title}" class="max-h-full max-w-full object-contain">
-                            </div>
-                            <div class="p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="text-yellow-400 flex">
-                                        ${generateStarRating(deal.rating || 0)}
-                                    </div>
-                                    <span class="text-sm text-gray-600 ml-1">${deal.rating || '0'} ${deal.reviews ? `(${deal.reviews} reviews)` : ''}</span>
-                                </div>
-                                <h5 class="font-medium text-gray-800 mb-1">${deal.title}</h5>
-                                <p class="text-gray-500 text-sm mb-2">${deal.source || 'Online Store'}</p>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-lg font-bold text-indigo-600">${deal.price || 'Price unavailable'}</span>
-                                    <span class="text-sm text-green-600">${deal.shipping || ''}</span>
-                                </div>
-                            </div>
-                        </a>
-                    `).join('')}
+      if (deals.length > 1) {
+        section.innerHTML = `
+          <h4 class="text-lg font-semibold mb-2">${groupKey}</h4>
+          <div class="space-y-4">
+            ${deals.map(deal => `
+              <div class="border rounded-lg p-3 flex gap-4 items-center ${deal === best ? 'border-green-500 bg-green-50' : 'border-gray-200'}">
+                <div class="w-24 h-24 bg-white flex items-center justify-center border rounded">
+                  <img src="${deal.image || './assets/placeholder.png'}" alt="${deal.title}" class="max-h-full max-w-full object-contain">
                 </div>
-            `;
-        } else {
-            // Show product name with no results
-            dealsHtml = `
-                <div class="text-center py-4 text-gray-500">
-                    <p>No deals found for <strong>${productDeals.product.name}</strong>.</p>
+                <div class="flex-1">
+                  <div class="font-semibold">${deal.source}</div>
+                  <div class="text-sm text-gray-500">${deal.title}</div>
+                  ${deal === best ? '<div class="text-xs font-bold text-green-600 mt-1">✅ BEST VALUE</div>' : ''}
+                  <div class="mt-2 flex justify-between items-center">
+                    <div class="text-indigo-600 font-bold">${deal.price}</div>
+                    <button class="bg-indigo-600 text-white text-sm px-3 py-1 rounded add-to-cart-btn" data-deal='${JSON.stringify(deal)}'>Add to List</button>
+                  </div>
                 </div>
-            `;
-        }
-
-        productSection.innerHTML = `
-            <h4 class="text-lg font-medium mb-3 pb-2 border-b border-gray-200">${productDeals.product.name}</h4>
-            ${dealsHtml}
+              </div>
+            `).join('')}
+          </div>
         `;
+      } else {
+        const deal = deals[0];
+        section.innerHTML = `
+          <h4 class="text-lg font-semibold mb-2">${groupKey}</h4>
+          <div class="flex gap-4 border p-4 rounded bg-yellow-50 border-yellow-300 items-center">
+            <div class="w-24 h-24 bg-white flex items-center justify-center rounded border">
+              <img src="${deal.image || './assets/placeholder.png'}" alt="${deal.title}" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800">${deal.source}</div>
+              <div class="text-sm text-gray-600">${deal.title}</div>
+              <div class="text-xs text-yellow-700 mt-1">No other sources available for comparison.</div>
+              <div class="mt-2 flex justify-between items-center">
+                <div class="font-bold text-indigo-600 text-lg">${deal.price}</div>
+                <button class="bg-indigo-600 text-white px-3 py-1 rounded add-to-cart-btn" data-deal='${JSON.stringify(deal)}'>Add to List</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
 
-        // Only show "Load More" if there are initial results
-        if (productDeals.deals && productDeals.deals.length > 0) {
-            const loadMoreBtn = document.createElement('button');
-            loadMoreBtn.className = 'mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
-            loadMoreBtn.textContent = 'Load More';
-            loadMoreBtn.addEventListener('click', () =>
-                loadMoreDeals(productDeals.product.name, productSection)
-            );
-            productSection.appendChild(loadMoreBtn);
-        }
-
-        dealsContainer.appendChild(productSection);
+      wrapper.appendChild(section);
     });
+  });
 
-    // ✅ Now finally show the container only if there was something to show
-    dealsResults.classList.remove('hidden');
-    dealsResults.classList.add('animate-fade-in');
+  dealsContainer.appendChild(wrapper);
+  const resultsBlock = document.getElementById('deals-results');
+  resultsBlock.classList.remove('hidden');
 }
+
+
+
+function normalizeTitleQuantity(title) {
+  const match = title.match(/(\d+(\.\d+)?)(\s*)(ml|l|g|kg|pieces|pcs|dozen|each)/i);
+  if (!match) {
+    if (/each/i.test(title)) return { qty: 1, unit: "piece" };
+    return { qty: "unknown", unit: "unit" };
+  }
+
+  let qty = parseFloat(match[1]);
+  let unit = match[4].toLowerCase();
+
+  if (unit === "ml") { qty = qty / 1000; unit = "L"; }
+  else if (unit === "g") { qty = qty / 1000; unit = "kg"; }
+  else if (unit === "pcs" || unit === "piece") { unit = "pieces"; }
+  else if (unit === "dozen") { qty = qty * 12; unit = "pieces"; }
+
+  return { qty: qty.toFixed(2), unit };
+}
+
+function extractNormalizedName(title) {
+  return title.replace(/(Coles|Woolworths|Amazon|Fresh|Organic|Supermarkets)/gi, '')
+              .trim().split(' ').slice(0, 3).join(' ');
+}
+function groupByNormalizedTitle(deals) {
+  const map = {};
+  deals.forEach(deal => {
+    const { qty, unit } = normalizeTitleQuantity(deal.title);
+    const name = extractNormalizedName(deal.title);
+    const key = `${name} – ${qty} ${unit}`;
+    if (!map[key]) map[key] = [];
+    map[key].push(deal);
+  });
+  return map;
+}
+
+function findBestValue(deals) {
+  return deals.reduce((a, b) =>
+    parseFloat(a.price.replace(/[^0-9.]/g, '')) < parseFloat(b.price.replace(/[^0-9.]/g, '')) ? a : b,
+    deals[0]
+  );
+}
+
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('add-to-cart-btn')) {
+    const deal = JSON.parse(e.target.dataset.deal);
+    cartItems.push(deal);
+    updateCartOverlay();
+  }
+});
+
+function updateCartOverlay() {
+  const overlay = document.getElementById('cart-overlay');
+  const list = document.getElementById('cart-items-list');
+  list.innerHTML = cartItems.map(item => `
+    <div class="text-sm border-b py-2">${item.title} – ${item.price}</div>
+  `).join('');
+  overlay.classList.remove('hidden');
+}
+
+function goToCart() {
+  const summary = document.getElementById('cart-summary');
+  const list = document.getElementById('cart-summary-list');
+
+  list.innerHTML = cartItems.map(item => `
+    <div class="border-b py-2">${item.title} – <strong>${item.price}</strong> from ${item.source}</div>
+  `).join('');
+
+  summary.classList.remove('hidden');
+}
+
+//     function displayDeals(dealsData) {
+//     const dealsResults = document.getElementById('deals-results');
+//     const dealsContainer = document.getElementById('deals-container');
+
+//     // Clear previous results
+//     dealsContainer.innerHTML = '';
+
+//     // Check if all products have no deals
+//     const noDealsFound = !dealsData || dealsData.length === 0 || dealsData.every(d => !d.deals || d.deals.length === 0);
+
+//     if (noDealsFound) {
+//         dealsResults.classList.add('hidden'); // ❌ Don't show the block at all
+//         return;
+//     }
+
+//     // Loop through each product and show results
+//     dealsData.forEach(productDeals => {
+//         const productSection = document.createElement('div');
+//         productSection.className = 'product-deals animate-fade-in';
+
+//         let dealsHtml = '';
+
+//         if (productDeals.deals && productDeals.deals.length > 0) {
+//             dealsHtml = `
+//                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+//                     ${productDeals.deals.map(deal => `
+//                         <a href="${deal.link}" target="_blank" class="product-item block bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-indigo-300">
+//                             <div class="h-48 bg-gray-100 flex items-center justify-center">
+//                                 <img src="${deal.image || './assets/placeholder.png'}" alt="${deal.title}" class="max-h-full max-w-full object-contain">
+//                             </div>
+//                             <div class="p-4">
+//                                 <div class="flex items-center mb-2">
+//                                     <div class="text-yellow-400 flex">
+//                                         ${generateStarRating(deal.rating || 0)}
+//                                     </div>
+//                                     <span class="text-sm text-gray-600 ml-1">${deal.rating || '0'} ${deal.reviews ? `(${deal.reviews} reviews)` : ''}</span>
+//                                 </div>
+//                                 <h5 class="font-medium text-gray-800 mb-1">${deal.title}</h5>
+//                                 <p class="text-gray-500 text-sm mb-2">${deal.source || 'Online Store'}</p>
+//                                 <div class="flex justify-between items-center">
+//                                     <span class="text-lg font-bold text-indigo-600">${deal.price || 'Price unavailable'}</span>
+//                                     <span class="text-sm text-green-600">${deal.shipping || ''}</span>
+//                                 </div>
+//                             </div>
+//                         </a>
+//                     `).join('')}
+//                 </div>
+//             `;
+//         } else {
+//             // Show product name with no results
+//             dealsHtml = `
+//                 <div class="text-center py-4 text-gray-500">
+//                     <p>No deals found for <strong>${productDeals.product.name}</strong>.</p>
+//                 </div>
+//             `;
+//         }
+
+//         productSection.innerHTML = `
+//             <h4 class="text-lg font-medium mb-3 pb-2 border-b border-gray-200">${productDeals.product.name}</h4>
+//             ${dealsHtml}
+//         `;
+
+//         // Only show "Load More" if there are initial results
+//         if (productDeals.deals && productDeals.deals.length > 0) {
+//             const loadMoreBtn = document.createElement('button');
+//             loadMoreBtn.className = 'mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700';
+//             loadMoreBtn.textContent = 'Load More';
+//             loadMoreBtn.addEventListener('click', () =>
+//                 loadMoreDeals(productDeals.product.name, productSection)
+//             );
+//             productSection.appendChild(loadMoreBtn);
+//         }
+
+//         dealsContainer.appendChild(productSection);
+//     });
+
+//     // ✅ Now finally show the container only if there was something to show
+//     dealsResults.classList.remove('hidden');
+//     dealsResults.classList.add('animate-fade-in');
+// }
 
     
     // Generate star rating HTML

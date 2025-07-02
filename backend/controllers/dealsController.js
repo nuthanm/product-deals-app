@@ -138,12 +138,12 @@ async function fetchDealsFromSerpAPI(name, start = 0) {
     const response = await axios.get('https://serpapi.com/search', { params });
     const rawResults = response.data?.shopping_results || [];
 
-    const paginatedRaw = rawResults.slice(start, start + 10);
-    const filteredResults = filterByAllowedSources(paginatedRaw);
+    //const paginatedRaw = rawResults.slice(start, start + 10);
+    //const filteredResults = filterByAllowedSources(paginatedRaw);
 
-    console.log(`SerpAPI returned ${rawResults.length} total. Returning ${filteredResults.length} after filtering.`);
+    console.log(`SerpAPI returned ${rawResults.length} total. `);//Returning ${filteredResults.length} after filtering.`);
 
-    return filteredResults.map(item => ({
+    return rawResults.map(item => ({
       title: item.title,
       link: item.product_link || item.link,
       image: item.thumbnail,
