@@ -6,12 +6,12 @@ Author : Nuthan M
 Created Date : 2025-July-03
 */
 
-const Product = require("../models/Product");
+import { find } from "../models/Product";
 
 /**
  * GET /api/autocomplete : Get autocomplete results for product search.
  */
-exports.getAutocompleteResults = async (req, res) => {
+export async function getAutocompleteResults(req, res) {
   try {
     const { query } = req.query;
 
@@ -37,7 +37,7 @@ exports.getAutocompleteResults = async (req, res) => {
     // 3. Limiting results to 10 for performance and usability.
     // 4. If no results found, add a generic fallback product with the query as name.
 
-    const products = await Product.find({
+    const products = await find({
       name: { $regex: query, $options: "i" },
     })
       .select("name _id category")
@@ -73,4 +73,4 @@ exports.getAutocompleteResults = async (req, res) => {
     console.error("Error in autocomplete:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
-};
+}
