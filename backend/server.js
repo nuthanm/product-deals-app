@@ -1,27 +1,39 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const routes = require('./routes');
+/*
+Purpose of this class : Handle server setup and configuration
+This module initializes the Express server, connects to MongoDB, and sets up middleware and routes.
+Dependencies : Express, Mongoose, CORS, dotenv for environment variables
+Author : Nuthan M
+Created Date : 2025-July-03
+*/
 
+require("dotenv").config();
+import express, { json, urlencoded, static as expressStatic } from "express";
+import { connect } from "mongoose";
+import cors from "cors";
+import routes from "./routes";
+// import { join } from "path"; - For local static file serving
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 // ✅ Must be first: Health check
-app.get('/', (req, res) => {
-  res.status(200).send('✅ API backend is running');
+app.get("/", (req, res) => {
+  res.status(200).send("✅ API backend is running");
 });
 
 // ✅ Middlewares
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(json());
+app.use(urlencoded({ extended: true }));
+
+// ✅ Static files - For Local testing
+// Serve static files from the "src" directory
+// Todo: app.use(expressStatic(join(__dirname, "../src")));
 
 // ✅ Routes
-app.use('/api', routes);
+app.use("/api", routes);
 
 // ✅ DB and Server startup
-mongoose.connect(process.env.MONGODB_URI)
+connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
 
