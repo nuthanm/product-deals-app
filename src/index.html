@@ -55,52 +55,64 @@
     </header>
 
     <main>
-      <!-- HERO & ADD-TO-LIST --><section class="hero-section">
-  <div class="content max-w-2xl mx-auto text-center space-y-6">
-    <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight">
-      Compare & Save on Your Favorite Products
-    </h1>
-    <p class="text-lg sm:text-xl opacity-90">
-      Choose up to 2 items and find the best prices from Coles & Woolworths
-    </p>
-
-    <!-- Search bar and add button -->
-    <div class="relative w-full flex flex-col sm:flex-row items-center gap-4">
-      <input
-        id="product-search"
-        type="text"
-        placeholder="Type to search..."
-        class="flex-grow w-full px-4 py-3 rounded-lg shadow-md text-gray-800 focus:outline-none"
-      />
-      <button
-        id="add-to-list"
-        class="bg-yellow-400 hover:bg-yellow-500 transition px-6 py-3 rounded-lg font-semibold text-gray-800 shadow"
+      <!-- HERO & ADD-TO-LIST -->
+      <section
+        class="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16 overflow-hidden"
       >
-        + Add to List
-      </button>
+        <div class="container mx-auto px-4 text-center">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4">
+            Compare & Save on Your Favorite Products
+          </h1>
+          <p class="text-base sm:text-lg md:text-xl mb-6 opacity-90">
+            Search up to 2 products and discover the best deals using Google Serp API
+          </p>
 
-      <!-- Autocomplete dropdown -->
-      <div
-        id="autocomplete-results"
-        class="hidden absolute top-full left-0 w-full bg-white shadow-lg rounded-b-lg z-20 overflow-auto max-h-64 border border-t-0"
-      ></div>
+          <!-- Input + Add Button -->
+           
+          <div class="relative max-w-xl mx-auto flex gap-4">
+  <!-- Input with attached autocomplete -->
+  <div class="relative flex-grow">
+    <input id="product-search" type="text"
+      class="w-full px-4 py-3 rounded-t-lg rounded-b-none text-gray-800 focus:outline-none"
+      placeholder="Type to search..." />
+
+    <div id="autocomplete-results"
+      class="hidden absolute top-full left-0 w-full bg-white shadow-lg border rounded-b-lg z-20 overflow-auto max-h-64">
+      <!-- suggestions -->
     </div>
-
-    <!-- Selected products status -->
-    <div class="text-sm italic text-white/90">
-      <span id="product-count">(0/2)</span> – Your list is empty
-    </div>
-
-    <!-- Get Deals button -->
-    <button
-      id="get-deals"
-      class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-md flex items-center gap-2 disabled:opacity-50"
-      disabled
-    >
-      <i class="fas fa-search-dollar"></i> Get Product(s) Deals
-    </button>
   </div>
-</section>
+
+  <!-- Add to List Button -->
+  <button id="add-to-list"
+    class="bg-yellow-400 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition">
+    + Add to List
+  </button>
+</div>
+
+
+          <!-- Chips & Count -->
+          <div
+            id="selected-products"
+            class="mt-4 flex flex-wrap justify-center gap-2"
+          >
+            <div id="empty-state" class="text-gray-200 italic">
+              Your list is empty.
+            </div>
+          </div>
+          <div class="text-center text-sm text-gray-200 mt-1">
+            <span id="product-count">(0/2)</span>
+          </div>
+
+          <!-- Get Deals CTA -->
+          <button
+            id="get-deals"
+            class="mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+            disabled
+          >
+            <i class="fas fa-search-dollar mr-2"></i>Get Product(s) Deals
+          </button>
+        </div>
+      </section>
 
       <!-- FEATURED DEALS -->
      <!-- <section id="featured-deals" class="container mx-auto px-4 py-16 hidden">
