@@ -1,71 +1,76 @@
-const Product = require('../models/Product');
-const redis = require('redis');
-let redisClient;
+/*
+Purpose of this class : Handle autocomplete search functionality for products
+This controller provides an endpoint to fetch product suggestions based on user input.
+Dependencies : Product model
+Author : Nuthan M
+Created Date : 2025-July-03
+*/
 
-// Initialize Redis client if enabled
-if (process.env.REDIS_ENABLED === 'true') {
-  redisClient = redis.createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379'
-  });
-  
-  redisClient.on('error', (err) => {
-    console.error('Redis error:', err);
-  });
-  
-  redisClient.connect().catch(console.error);
-}
+const Product = require("../models/Product");
 
 /**
- * Get autocomplete results for product search
+ * GET /api/autocomplete : Get autocomplete results for product search.
  */
 exports.getAutocompleteResults = async (req, res) => {
   try {
     const { query } = req.query;
 
-    if (!query || query.length < 2) {
-      return res.status(400).json({ message: 'Query must be at least 2 characters' });
+    // Validate query parameter - Ensure query is a string and has at least 2 characters
+    if (typeof query !== "string") {
+      return res.status(400).json({ message: "Query must be a string" });
     }
 
-    // Check Redis cache
-    if (redisClient && redisClient.isReady) {
-      const cacheKey = `autocomplete:${query.toLowerCase()}`;
-      const cachedResults = await redisClient.get(cacheKey);
-      if (cachedResults) {
-        return res.json(JSON.parse(cachedResults));
-      }
+    // Validate query parameter -
+    // 1. Check if query length is less than 2 characters
+    // 2. This is to prevent unnecessary database queries for very short inputs and to ensure a better user experience.
+    // 3. This also helps in reducing load on the database and improving performance
+    if (!query || query.length < 2) {
+      return res
+        .status(400)
+        .json({ message: "Query must be at least 2 characters" });
     }
+
+    // Objective: Fetch products from the database if the query is valid
+    // Approach:
+    // 1. Using regex to match product names that contain the query string
+    // 2. Using $options: "i" for case-insensitive search
+    // 3. Limiting results to 10 for performance and usability.
+    // 4. If no results found, add a generic fallback product with the query as name.
 
     const products = await Product.find({
-      name: { $regex: query, $options: 'i' }
+      name: { $regex: query, $options: "i" },
     })
-    .select('name _id category')
-    .limit(10);
+      .select("name _id category")
+      .limit(10);
 
     // If no results found, add a generic fallback
+    // product with the query as name.
+    // This fallback ensures that the user always gets a response,
+    // even if there are no matching products in the database.
     if (products.length === 0) {
       products.push({
         name: query,
         _id: null,
-        category: 'General'
+        category: "General",
       });
     }
 
     // Mapping should be done after fallback
-    const mappedResults = products.map(product => ({
+    // Objective: Map the results to a simpler structure for the response.
+    // Approach:
+    // 1. Extracting only the necessary fields: name, id, and category.
+    // 2. This helps in reducing the size of the response and makes it easier to handle on the client side.
+    // 3. If category is not available, default to "General".
+    const mappedResults = products.map((product) => ({
       name: product.name,
       id: product._id,
-      category: product.category || 'General'
+      category: product.category || "General",
     }));
 
-    // Cache result
-    if (redisClient && redisClient.isReady) {
-      const cacheKey = `autocomplete:${query.toLowerCase()}`;
-      await redisClient.set(cacheKey, JSON.stringify(mappedResults), { EX: 3600 });
-    }
-
+    // Objective: Return the mapped results as JSON response.
     res.json(mappedResults);
   } catch (error) {
-    console.error('Error in autocomplete:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Error in autocomplete:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
