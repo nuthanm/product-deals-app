@@ -6,7 +6,7 @@ Author : Nuthan M
 Created Date : 2025-July-03
 */
 
-import { find } from "../models/Product";
+import Product from "../models/Product.js";
 
 /**
  * GET /api/autocomplete : Get autocomplete results for product search.
@@ -37,7 +37,7 @@ export async function getAutocompleteResults(req, res) {
     // 3. Limiting results to 10 for performance and usability.
     // 4. If no results found, add a generic fallback product with the query as name.
 
-    const products = await find({
+    const products = await Product.find({
       name: { $regex: query, $options: "i" },
     })
       .select("name _id category")

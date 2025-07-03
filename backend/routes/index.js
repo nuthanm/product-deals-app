@@ -9,8 +9,11 @@ Created Date : 2025-July-03
 import { Router } from "express";
 const router = Router();
 
-import { getAutocompleteResults } from "../controllers/autocompleteController";
-import { getProductDeals, getBestDeals } from "../controllers/dealsController";
+import { getAutocompleteResults } from "../controllers/autocompleteController.js";
+import {
+  getProductDeals,
+  getBestDeals,
+} from "../controllers/dealsController.js";
 
 // This is used to fetch autocomplete results for product search
 // It is used in the search bar to provide suggestions as the user types

@@ -1,208 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="api-base" content="https://product-deals-app-production.up.railway.app/api">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="api-base"
+      content="https://product-deals-app-production.up.railway.app/api"
+    />
     <title>Product Deals Finder</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="./assets/styles.css">
-    <link rel="icon" href="./assets/favicon.ico">
-</head>
-<body class="min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-white shadow-sm">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <i class="fas fa-tags text-indigo-600 text-2xl mr-2"></i>                
-                <h1 id="title-refresh" class="cursor-pointer text-xl font-bold text-gray-800 hover:text-indigo-600 transition">
-                      Product Deals Finder
-                </h1>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+  </head>
+  <body class="font-sans antialiased bg-gray-50 text-gray-800">
+    <!-- HEADER GRADIENT -->
+    <div
+      class="w-full h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500"
+    ></div>
 
-            </div>
-            <nav>
-                <ul class="flex space-x-6">
-                    <li><a href="/" class="text-gray-600 hover:text-indigo-600 transition">Home</a></li>
-                    <li><a href="#" class="text-gray-600 hover:text-indigo-600 transition">About</a></li>
-                    <li><a href="#usage-policies" class="text-gray-600 hover:text-indigo-600 transition">Usage Policies</a></li>
-                </ul>
-            </nav>
-        </div>
+    <!-- HEADER -->
+    <header
+      class="container mx-auto px-4 py-6 flex justify-between items-center"
+    >
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-tags text-3xl text-indigo-600"></i>
+        <span class="text-2xl font-bold">Product Deals Finder</span>
+      </div>
+      <div class="flex space-x-3">
+        <a
+          href="/auth/google"
+          class="flex items-center justify-center p-2 md:px-4 md:py-2 bg-white rounded-full md:rounded-lg shadow hover:bg-gray-100 transition"
+        >
+          <i class="fab fa-google text-2xl text-gray-800"></i>
+          <span class="hidden md:inline-block ml-2 font-medium text-gray-800">
+            Sign in with Google
+          </span>
+        </a>
+        <a
+          href="/auth/facebook"
+          class="flex items-center justify-center p-2 md:px-4 md:py-2 bg-white rounded-full md:rounded-lg shadow hover:bg-gray-100 transition"
+        >
+          <i class="fab fa-facebook-f text-2xl text-gray-800"></i>
+          <span class="hidden md:inline-block ml-2 font-medium text-gray-800">
+            Sign in with Facebook
+          </span>
+        </a>
+      </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <!-- Search Section -->
-        <section class="search-container rounded-lg p-6 mb-8 text-white">
-            <h2 class="text-2xl font-bold mb-4">Find the Best Deals for Multiple Products</h2>
-            <p class="mb-6">Search for up to 5 products and compare the best deals from across the web.</p>
-            
-            <div class="relative mb-4">
-                <input type="text" id="product-search" placeholder="Search for a product..." 
-                       class="w-full p-4 pr-12 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400">              
-                <button id="add-to-list" class="absolute right-2 top-2 bg-indigo-700 text-white p-2 rounded-lg hover:bg-indigo-800 transition"
-                    title="You can only add up to 5 products." >
-                    <i class="fas fa-plus mr-1"></i> Add to List
-                </button>                
-                <!-- Autocomplete Dropdown -->
-                <div id="autocomplete-results" class="autocomplete-container hidden absolute z-10 w-full bg-white mt-1 rounded-lg shadow-lg border border-gray-200">
-                    <!-- Autocomplete items will be added here dynamically -->
-                </div>
-            </div>
-        </section>
-        
-        <!-- Selected Products List -->
-        <section class="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">Selected Products <span id="product-count" class="text-sm font-normal text-gray-500">(0/5)</span></h3>
-            
-            <div id="selected-products" class="space-y-3 mb-4">
-                <!-- Empty state -->
-                <div id="empty-state" class="text-center py-8 text-gray-500">
-                    <i class="fas fa-shopping-cart text-4xl mb-3 opacity-30"></i>
-                    <p>No products selected yet. Use the search box above to add products.</p>
-                </div>
-            </div>
-            
-            <button id="get-deals" class="hidden w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition flex items-center justify-center">
-                <i class="fas fa-search-dollar mr-2"></i> Get Product(s) Deals
+    <main>
+      <!-- HERO & ADD-TO-LIST -->
+      <section
+        class="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16 overflow-hidden"
+      >
+        <div class="container mx-auto px-4 text-center">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4">
+            Compare & Save on Your Favorite Products
+          </h1>
+          <p class="text-base sm:text-lg md:text-xl mb-6 opacity-90">
+            Search up to 2 products and discover the best deals from Coles &amp;
+            Woolworths
+          </p>
+
+          <!-- Input + Add Button -->
+          <div
+            class="relative max-w-xl mx-auto flex flex-col sm:flex-row gap-4"
+          >
+            <input
+              id="product-search"
+              type="text"
+              placeholder="Type to search..."
+              class="flex-grow px-4 py-3 rounded-lg text-gray-800 focus:outline-none"
+            />
+            <button
+              id="add-to-list"
+              class="bg-yellow-400 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition"
+            >
+              + Add to List
             </button>
-        </section>
-        
-        <!-- Deals Results Section -->
-        <section id="deals-results" class="hidden deals-container bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-xl font-semibold mb-6 text-gray-800">Best Deals Found</h3>
-            
-            <div id="deals-container" class="space-y-8">
-                <!-- Deals will be added here dynamically -->
+            <!-- Autocomplete dropdown -->
+            <div
+              id="autocomplete-results"
+              class="hidden absolute top-full left-0 w-full bg-white shadow-lg rounded-b-lg z-20 overflow-auto max-h-64"
+            ></div>
+          </div>
+
+          <!-- Chips & Count -->
+          <div
+            id="selected-products"
+            class="mt-4 flex flex-wrap justify-center gap-2"
+          >
+            <div id="empty-state" class="text-gray-200 italic">
+              Your list is empty.
             </div>
-        </section>
-        
-        <!-- Recent Searches Section -->
-        <section class="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-800">Recent Searches</h3>
-                <button id="clear-history" class="text-sm text-gray-500 hover:text-indigo-600 transition">Clear All</button>
-            </div>
-            
-            <div id="recent-searches" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                <!-- Recent searches will be added here dynamically -->
-            </div>
-        </section>
-          <!-- Usage Policies Section -->
-    <section id="usage-policies" class="bg-gray-50 py-12">
-        <div class="container mx-auto px-4">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Usage Policies</h2>
-            
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <div class="prose max-w-none">
-                    <h3>Terms of Use</h3>
-                    <p>By using the Product Deals Finder application, you agree to comply with these terms and all applicable laws and regulations.</p>
-                    
-                    <h3>Data Usage</h3>
-                    <p>We store your search history to improve your experience and provide the recent searches feature. This data is not shared with third parties.</p>
-                    
-                    <h3>API Usage</h3>
-                    <p>This application uses SerpAPI to fetch product deals. All searches are subject to SerpAPI's terms of service.</p>
-                    
-                    <h3>Limitations</h3>
-                    <p>Users can search for a maximum of 5 products at once. Results are cached for 24 hours to improve performance.</p>
-                    
-                    <h3>Privacy</h3>
-                    <p>We do not collect personal information beyond what is necessary for the application to function. For more details, please see our Privacy Policy.</p>
-                </div>
-            </div>
+          </div>
+          <div class="text-center text-sm text-gray-200 mt-1">
+            <span id="product-count">(0/2)</span>
+          </div>
+
+          <!-- Get Deals CTA -->
+          <button
+            id="get-deals"
+            class="mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+            disabled
+          >
+            <i class="fas fa-search-dollar mr-2"></i>Get Product(s) Deals
+          </button>
         </div>
-    </section>
-    
+      </section>
+
+      <!-- FEATURED DEALS -->
+      <section id="featured-deals" class="container mx-auto px-4 py-16">
+        <h2
+          class="text-2xl sm:text-3xl font-bold text-gray-800 mb-8 text-center"
+        >
+          Today’s Best Deals
+        </h2>
+        <div
+          id="featured-deals-container"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        ></div>
+      </section>
+
+      <!-- SEARCH RESULTS -->
+      <section id="deals-results" class="container mx-auto px-4 py-16 hidden">
+        <h2
+          class="text-2xl sm:text-3xl font-bold text-gray-800 mb-8 text-center"
+        >
+          Search Results
+        </h2>
+        <div
+          id="deals-container"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        ></div>
+      </section>
+      <section id="sec-recent-searchs" class="container mx-auto px-4 py-16">
+        <!-- Recent Searches -->
+        <div class="mt-12">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-semibold text-lg">Recent Searches</h3>
+            <button
+              id="clear-history"
+              class="text-red-500 hover:underline text-sm"
+            >
+              Clear History
+            </button>
+          </div>
+          <div
+            id="recent-searches"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          ></div>
+        </div>
+      </section>
+      <!-- WHY CHOOSE US -->
+      <section class="bg-gray-100 py-16">
+        <div class="container mx-auto px-4 text-center">
+          <h2 class="text-2xl sm:text-3xl font-bold mb-8">
+            Why Choose Product Deals Finder?
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <i class="fas fa-wallet text-indigo-600 text-4xl mb-4"></i>
+              <h3 class="font-semibold mb-1">Maximize Savings</h3>
+              <p class="text-gray-600">
+                Instantly find the best prices and promos.
+              </p>
+            </div>
+            <div>
+              <i class="fas fa-store text-indigo-600 text-4xl mb-4"></i>
+              <h3 class="font-semibold mb-1">Trusted Sources</h3>
+              <p class="text-gray-600">
+                Compare deals from Coles &amp; Woolworths.
+              </p>
+            </div>
+            <div>
+              <i class="fas fa-thumbs-up text-indigo-600 text-4xl mb-4"></i>
+              <h3 class="font-semibold mb-1">Easy to Use</h3>
+              <p class="text-gray-600">
+                Simple interface for fast comparisons.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section class="bg-white py-16">
+        <div class="container mx-auto px-4 text-center">
+          <h2 class="text-2xl sm:text-3xl font-bold mb-8">How It Works</h2>
+          <div
+            class="flex flex-col items-center space-y-8 md:flex-row md:justify-center md:space-y-0 md:space-x-8"
+          >
+            <div class="flex-1">
+              <i class="fas fa-search-dollar text-indigo-600 text-5xl mb-4"></i>
+              <h3 class="font-semibold mb-2">1. Search</h3>
+              <p class="text-gray-600">
+                Enter up to 5 products you want to buy.
+              </p>
+            </div>
+            <div class="flex-1">
+              <i class="fas fa-balance-scale text-indigo-600 text-5xl mb-4"></i>
+              <h3 class="font-semibold mb-2">2. Compare</h3>
+              <p class="text-gray-600">See side-by-side price comparisons.</p>
+            </div>
+            <div class="flex-1">
+              <i class="fas fa-dollar-sign text-indigo-600 text-5xl mb-4"></i>
+              <h3 class="font-semibold mb-2">3. Save</h3>
+              <p class="text-gray-600">Choose the best deal and save money.</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
-    
-      <!-- ✅ This spacer is only used if content above is short -->
-      <div class="flex-grow"></div>
-    
-    <!-- Error Toast Notification (hidden by default) -->
-    <div id="error-toast" class="hidden fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg animate-shake max-w-md z-50">
-        <div class="flex items-center">
-            <i class="fas fa-exclamation-circle mr-2"></i>
-            <div>
-                <div class="font-medium">Error</div>
-                <div class="text-sm" id="error-message">Something went wrong. Please try again.</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Success Toast Notification (hidden by default) -->
-    <div id="success-toast" class="hidden fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg animate-fade-in max-w-md z-50">
-        <div class="flex items-center">
-            <i class="fas fa-check-circle mr-2"></i>
-            <div>
-                <div class="font-medium">Success</div>
-                <div class="text-sm" id="success-message">Operation completed successfully.</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Loading Overlay (hidden by default) -->
-    <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-5 rounded-lg shadow-lg text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-            <p class="text-gray-700" id="loading-message">Finding the best deals...</p>
-        </div>
-    </div>
-    
-      <!-- Move to Top Button -->
-    <button id="move-to-top" title="Go to top"
-        class="hidden fixed bottom-20 right-4 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg z-50 transition-opacity duration-300">
-        <i class="fas fa-arrow-up"></i>
+    <!-- Move-to-Top Button -->
+    <button
+      id="move-to-top"
+      class="z-50 hidden fixed bottom-8 right-8 p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition"
+      aria-label="Scroll to top"
+    >
+      <i class="fas fa-arrow-up"></i>
     </button>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Product Deals Finder</h4>
-                    <p class="text-gray-400">Find the best deals for multiple products in one place. Compare prices and make informed purchasing decisions.</p>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition footer-link">Home</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition footer-link">About</a></li>
-                        <li><a href="#usage-policies" class="text-gray-400 hover:text-white transition footer-link">Usage Policies</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition footer-link">Contact</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Connect With Us</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-linkedin-in"></i></a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="border-t border-gray-700 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-400">© 2025 Product Deals Finder. All rights reserved.</p>
-                <div class="mt-4 md:mt-0">
-                    <a href="#" class="text-gray-400 hover:text-white transition footer-link mr-4">Privacy Policy</a>
-                    <a href="#" class="text-gray-400 hover:text-white transition footer-link">Terms of Service</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <!-- FOOTER GRADIENT -->
+    <div
+      class="w-full h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500"
+    ></div>
 
-    <!-- JavaScript -->
+    <div class="relative">
+      <footer class="relative z-10 bg-gray-800 text-gray-400 py-8">
+        <div
+          class="container mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6"
+        >
+          <!-- SOURCES -->
+          <div>
+            <h4 class="text-white font-semibold mb-4">Sources</h4>
+            <ul id="sources-list" class="space-y-2 flex flex-col">
+              <li class="flex items-center space-x-2">
+                <img
+                  src="/assets/logos/coles.png"
+                  alt="Coles"
+                  class="h-6 w-auto"
+                />
+                <span>Coles</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <img
+                  src="/assets/logos/woolworths.png"
+                  alt="Woolworths"
+                  class="h-6 w-auto"
+                />
+                <span>Woolworths</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- QUICK LINKS -->
+          <div>
+            <h4 class="text-white font-semibold mb-4">Quick Links</h4>
+            <ul class="space-y-2">
+              <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+              <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+              <li><a href="#" class="hover:text-white">Contact Us</a></li>
+            </ul>
+          </div>
+
+          <!-- STAY CONNECTED (spans 2 cols on mobile) -->
+          <div class="col-span-2 md:col-span-1">
+            <h4 class="text-white font-semibold mb-4">Stay Connected</h4>
+            <p class="mb-4">
+              Follow us on social media for the latest deals and updates.
+            </p>
+            <div class="flex space-x-4">
+              <a href="#" class="hover:text-white"
+                ><i class="fab fa-facebook-f"></i
+              ></a>
+              <a href="#" class="hover:text-white"
+                ><i class="fab fa-twitter"></i
+              ></a>
+              <a href="#" class="hover:text-white"
+                ><i class="fab fa-instagram"></i
+              ></a>
+              <a href="#" class="hover:text-white"
+                ><i class="fab fa-linkedin-in"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+
+        <!-- COPYRIGHT, always centered -->
+        <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm">
+          © 2025 Product Deals Finder. All rights reserved.
+        </div>
+      </footer>
+
+      <!-- bottom semi-circle gradient -->
+      <div
+        class="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-full"
+      ></div>
+    </div>
+
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="./assets/app.js"></script>
-    <script>
-      window.API_BASE_URL = "https://product-deals-app-production.up.railway.app/api";
-    </script>
-
-</body>
+  </body>
 </html>

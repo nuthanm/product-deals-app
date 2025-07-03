@@ -6,7 +6,7 @@ Author : Nuthan M
 Created Date : 2025-July-03
 */
 
-require("dotenv").config();
+import "dotenv/config";
 
 // Validate and parse environment variables
 if (!process.env.ALLOWED_SOURCES) {
@@ -36,8 +36,8 @@ const FEATURED_LIMIT = parseInt(process.env.FEATURED_LIMIT, 10) || 3;
 if (isNaN(FEATURED_LIMIT) || FEATURED_LIMIT <= 0)
   throw new Error("FEATURED_LIMIT must be a positive integer");
 
-/* TODO: Currently we are not using this, but it can be useful in the future
-We basically use this to display logos for each source in the frontend.
+//TODO: Currently we are not using this, but it can be useful in the future
+//We basically use this to display logos for each source in the frontend.
 
 // Build a map of source → logo URL
 const LOGOS = ALLOWED_SOURCES.reduce((acc, src) => {
@@ -45,7 +45,6 @@ const LOGOS = ALLOWED_SOURCES.reduce((acc, src) => {
   acc[src] = process.env[key] || "/assets/logos/default.png";
   return acc;
 }, {});
-*/
 
 if (!process.env.MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS) {
   throw new Error(
@@ -61,7 +60,7 @@ if (!process.env.MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED) {
 
 const MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS = parseInt(
   process.env.MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS,
-  2
+  10
 );
 
 if (
@@ -75,7 +74,7 @@ if (
 
 const MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED = parseInt(
   process.env.MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED,
-  5
+  10
 );
 
 if (
@@ -90,6 +89,7 @@ if (
 export default {
   ALLOWED_SOURCES,
   FEATURED_LIMIT,
+  LOGOS,
   MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS,
   MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED,
 };

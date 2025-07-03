@@ -6,11 +6,11 @@ Author : Nuthan M
 Created Date : 2025-July-03
 */
 
-import { get } from "axios";
-import Product from "../models/Product";
-import ProductHistory from "../models/ProductHistory";
-import ProductResponse from "../models/ProductResponse";
-import sourceFilter from "../utils/sourceFilter";
+import axios from "axios";
+import Product from "../models/Product.js";
+import ProductHistory from "../models/ProductHistory.js";
+import ProductResponse from "../models/ProductResponse.js";
+import sourceFilter from "../utils/sourceFilter.js";
 
 // Import source filtering utility
 // This utility provides functions to filter items based on allowed sources defined in the environment variable ALLOWED_SOURCES
@@ -19,12 +19,14 @@ const { filterByAllowedSources } = sourceFilter;
 
 // Import configuration constants
 // These constants are used to define allowed sources, featured product limits.
+import config from "../utils/config.js";
 const {
   ALLOWED_SOURCES,
   FEATURED_LIMIT,
   MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS,
   MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED,
-} = require("../utils/config").default;
+} = config;
+
 /**
  * POST /api/deals
  * Body: { products: [{ id?, name }], start?: number }
