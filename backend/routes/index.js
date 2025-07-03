@@ -12,7 +12,7 @@ const router = Router();
 import { getAutocompleteResults } from "../controllers/autocompleteController.js";
 import {
   getProductDeals,
-  getBestDeals,
+  // Todo: getBestDeals,
 } from "../controllers/dealsController.js";
 
 // This is used to fetch autocomplete results for product search
@@ -25,6 +25,6 @@ router.post("/deals", getProductDeals);
 
 // We use this to fetch best deals from the database
 // This is used to display the best deals on the homepage
-router.get("/deals/best", getBestDeals);
+// Todo: router.get("/deals/best", getBestDeals);
 
 export default router;

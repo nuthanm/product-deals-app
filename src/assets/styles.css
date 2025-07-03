@@ -175,3 +175,7 @@ body {
 .max-w-xl {
   max-width: 80rem;
 }
+
+.deals-container {
+  grid-template-columns: auto !important;
+}

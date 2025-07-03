@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const recentEl = document.getElementById("recent-searches");
   const clearHistory = document.getElementById("clear-history");
   const moveTop = document.getElementById("move-to-top");
+  // const featuredDealsSection = document.getElementById("featured-deals");
   // Import configuration constants
   // These constants are used to define allowed sources, featured product limits.
   // const {
@@ -56,6 +57,12 @@ document.addEventListener("DOMContentLoaded", () => {
     addToListBtn.disabled = full;
     productSearch.disabled = full;
     getDealsBtn.disabled = productList.length === 0;
+
+    // Toggling deals and feature deals section
+    if (productList.length === 0) {
+      dealsSection.classList.add("hidden");
+      //featuredDealsSection.classList.remove("hidden");
+    }
   }
 
   // Remove chip
@@ -77,13 +84,12 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         autocompleteEl.innerHTML = data
           .map(
-            (p) => `
-          <div class="p-3 hover:bg-gray-100 cursor-pointer" data-name="${
-            p.name
-          }" data-id="${p.id || ""}">
-            ${p.name}
-          </div>
-        `
+            (p, i) => `
+      <div class="px-4 py-2 text-left border-b last:border-b-0 hover:bg-gray-100 cursor-pointer text-sm text-gray-800"
+           data-name="${p.name}" data-id="${p.id || ""}">
+        ${p.name}
+      </div>
+    `
           )
           .join("");
       }
@@ -114,7 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function addToList() {
     const name = productSearch.value.trim();
     if (!name) return;
-    if (productList.length >= MAX_PRODUCTS) return alert(`Max ${MAX_PRODUCTS}`);
+    if (productList.length >= MAX_PRODUCTS) {
+      showToast(`You can only add up to ${MAX_PRODUCTS} products.`, "error");
+      return;
+    }
     if (productList.some((p) => p.name.toLowerCase() === name.toLowerCase()))
       return;
     productList.push({ id: productSearch.dataset.productId, name });
@@ -138,36 +147,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const resp = await axios.post(`${API_BASE}/deals?start=0`, {
         products: productList,
       });
-      dealsContainer.innerHTML = resp.data
-        .map(
-          (p) => `
-        <div class="mb-8">
-          <h4 class="font-semibold mb-4">${p.product.name}</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            ${p.deals
-              .map(
-                (d) => `
-              <a href="${d.link}" target="_blank" class="border rounded-lg overflow-hidden hover:shadow-lg transition">
-                <img src="${d.image}" class="w-full h-40 object-contain bg-gray-100" />
-                <div class="p-4">
-                  <div class="text-indigo-600 font-bold">${d.price}</div>
-                  <div class="text-sm text-gray-500">${d.source}</div>
-                </div>
-              </a>
-            `
-              )
-              .join("")}
-          </div>
-          <button class="mt-4 btn-load-more bg-indigo-600 text-white px-4 py-2 rounded" data-product="${
-            p.product.name
-          }">
-            Load More
-          </button>
-        </div>
-      `
-        )
-        .join("");
+      displayDealsGrouped(resp.data);
+      // featuredDealsSection.classList.add("hidden");
       dealsSection.classList.remove("hidden");
+
+      // Adding the recent searches in the section
+      saveRecent();
+
       window.scrollTo({ top: dealsSection.offsetTop, behavior: "smooth" });
     } catch (err) {
       console.error(err);
@@ -214,22 +200,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Move to top
-  window.addEventListener("scroll", () => {
-    moveTop.classList.toggle("hidden", window.scrollY < 300);
-  });
-
-  moveTop.addEventListener("click", () =>
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  );
-
   // Recent searches & clear
   function loadRecent() {
     const arr = JSON.parse(localStorage.getItem("recentSearches") || "[]");
-    recentEl.innerHTML =
-      arr
-        .map(
-          (p, i) => `
+    const secRecent = document.getElementById("sec-recent-searches");
+
+    if (!arr || arr.length === 0) {
+      secRecent.classList.add("hidden");
+      return;
+    }
+
+    const html = arr
+      .map(
+        (p, i) => `
       <div class="p-3 border rounded relative">
         <button data-index="${i}" class="absolute top-2 right-2 text-gray-400 hover:text-red-500">
           <i class="fas fa-times-circle"></i>
@@ -240,14 +223,18 @@ document.addEventListener("DOMContentLoaded", () => {
         </button>
       </div>
     `
-        )
-        .join("") ||
-      `<div class="col-span-full text-center text-gray-500 italic">No recent searches</div>`;
+      )
+      .join("");
+
+    document.getElementById("recent-searches").innerHTML = html;
+    secRecent.classList.remove("hidden");
   }
+
   clearHistory.addEventListener("click", () => {
     localStorage.removeItem("recentSearches");
     loadRecent();
   });
+
   recentEl.addEventListener("click", (e) => {
     if (e.target.matches("[data-index]")) {
       const idx = +e.target.dataset.index;
@@ -274,35 +261,368 @@ document.addEventListener("DOMContentLoaded", () => {
     loadRecent();
   }
 
-  // Load featured deals
-  async function loadFeaturedDeals() {
-    const limit = 3;
-    try {
-      const { data } = await axios.get(`${API_BASE}/deals/best?limit=${limit}`);
-      document.getElementById("featured-deals-container").innerHTML = data
-        .map(
-          (d) => `
-        <div class="bg-white rounded-lg shadow p-6 flex flex-col">
-          <img src="${d.image}" alt="${
-            d.title
-          }" class="h-40 object-cover rounded-md mb-4"/>
-          <div class="flex items-center mb-2">
-            <h3 class="font-semibold text-lg flex-grow">${d.title}</h3>
-            <img src="${d.logoUrl}" alt="${d.source}" class="h-6 w-auto ml-2"/>
+  // Extracted utility functions for display logic
+  function normalizeTitleQuantity(title) {
+    const match = title.match(
+      /(\d+(\.\d+)?)(\s*)(ml|l|g|kg|pieces|pcs|dozen|each)/i
+    );
+    if (!match) {
+      if (/each/i.test(title)) return { qty: 1, unit: "piece" };
+      return { qty: "unknown", unit: "unit" };
+    }
+
+    let qty = parseFloat(match[1]);
+    let unit = match[4].toLowerCase();
+
+    if (unit === "ml") {
+      qty = qty / 1000;
+      unit = "L";
+    } else if (unit === "g") {
+      qty = qty / 1000;
+      unit = "kg";
+    } else if (unit === "pcs" || unit === "piece") {
+      unit = "pieces";
+    } else if (unit === "dozen") {
+      qty = qty * 12;
+      unit = "pieces";
+    }
+
+    return { qty: qty.toFixed(2), unit };
+  }
+
+  function extractNormalizedName(title) {
+    return title
+      .replace(/(Coles|Woolworths|Amazon|Fresh|Organic|Supermarkets)/gi, "")
+      .trim()
+      .split(" ")
+      .slice(0, 3)
+      .join(" ");
+  }
+
+  function groupByNormalizedTitle(deals) {
+    const map = {};
+    deals.forEach((deal) => {
+      const { qty, unit } = normalizeTitleQuantity(deal.title);
+      const name = extractNormalizedName(deal.title);
+      const key = `${name} – ${qty} ${unit}`;
+      if (!map[key]) map[key] = [];
+      map[key].push(deal);
+    });
+    return map;
+  }
+
+  function findBestValues(deals) {
+    const minPrice = Math.min(
+      ...deals.map((d) => parseFloat(d.price.replace(/[^0-9.]/g, "")))
+    );
+
+    return deals.filter(
+      (d) => parseFloat(d.price.replace(/[^0-9.]/g, "")) === minPrice
+    );
+  }
+
+  // Replacement displayDeals used in getDeals
+  function displayDealsGrouped(dealsData) {
+    const dealsContainer = document.getElementById("deals-container");
+    dealsContainer.innerHTML = "";
+    let isFirst = true;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "space-y-6";
+
+    dealsData.forEach((productData) => {
+      const grouped = groupByNormalizedTitle(productData.deals);
+
+      if (!isFirst) {
+        const productHeader = document.createElement("div");
+        productHeader.className =
+          "border-b-2 border-dashed border-gray-300 my-6 pb-4";
+
+        productHeader.innerHTML = `
+  <h3 class="text-xl font-bold text-gray-800 mb-2">
+    Search: <span class="text-indigo-600">${productData.product.name}</span>
+  </h3>
+`;
+
+        wrapper.appendChild(productHeader);
+      }
+      isFirst = false;
+
+      Object.entries(grouped).forEach(([groupKey, deals]) => {
+        const section = document.createElement("div");
+        section.className =
+          "product-deals border rounded shadow-sm bg-white p-4";
+
+        section.setAttribute(
+          "data-product",
+          productData.product.name.toLowerCase()
+        );
+
+        const best = findBestValues(deals);
+
+        if (deals.length > 1) {
+          section.innerHTML = `
+          <h4 class="text-lg font-semibold mb-2">${groupKey}</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+
+            ${deals
+              .map(
+                (deal) => `
+              <div class="border rounded-lg p-3 flex gap-4 items-center ${
+                deal === best
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-200"
+              }">
+                <div class="w-24 h-24 bg-white flex items-center justify-center border rounded">
+                  <img src="${deal.image || "./assets/placeholder.png"}" alt="${
+                  deal.title
+                }" class="max-h-full max-w-full object-contain">
+                </div>
+                <div class="flex-1">
+                  <div class="font-semibold">${deal.source}</div>
+                  <div class="text-sm text-gray-500">${deal.title}</div>
+                  ${
+                    deals.includes(deal)
+                      ? '<div class="text-xs font-bold text-green-600 mt-1">✅ BEST VALUE</div>'
+                      : ""
+                  }
+                  <div class="mt-2 flex justify-between items-center">
+                    <div class="text-indigo-600 font-bold">${deal.price}</div>
+                    <button class="bg-indigo-600 text-white text-sm px-3 py-1 rounded add-to-cart-btn" data-deal='${JSON.stringify(
+                      deal
+                    )}'>Add to Comparison</button>
+                  </div>
+                </div>
+              </div>
+            `
+              )
+              .join("")}
           </div>
-          <p class="text-gray-500 mb-4">${d.price} at ${d.source}</p>
-          <span class="mt-auto text-green-600 font-bold">Save ${
-            d.savings || ""
-          }</span>
-        </div>
-      `
-        )
-        .join("");
-    } catch {}
+        `;
+        } else {
+          const deal = deals[0];
+          section.innerHTML = `
+          <h4 class="text-lg font-semibold mb-2">${groupKey}</h4>
+          <div class="flex gap-4 border p-4 rounded bg-yellow-50 border-yellow-300 items-center">
+            <div class="w-24 h-24 bg-white flex items-center justify-center rounded border">
+              <img src="${deal.image || "./assets/placeholder.png"}" alt="${
+            deal.title
+          }" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800">${deal.source}</div>
+              <div class="text-sm text-gray-600">${deal.title}</div>
+              <div class="text-xs text-yellow-700 mt-1">No other sources available for comparison.</div>
+              <div class="mt-2 flex justify-between items-center">
+                <div class="font-bold text-indigo-600 text-lg">${
+                  deal.price
+                }</div>
+                <button class="bg-indigo-600 text-white px-3 py-1 rounded add-to-cart-btn" data-deal='${JSON.stringify(
+                  deal
+                )}'>Add to Comparison</button>
+              </div>
+            </div>
+          </div>
+        `;
+        }
+
+        wrapper.appendChild(section);
+      });
+    });
+
+    dealsContainer.appendChild(wrapper);
+    document.getElementById("deals-results").classList.remove("hidden");
+  }
+
+  /** --- GROUPING AND BEST VALUE LOGIC --- **/
+
+  function normalizeTitleQuantity(title) {
+    const match = title.match(
+      /(\d+(\.\d+)?)(\s*)(ml|l|g|kg|pieces|pcs|dozen|each)/i
+    );
+    if (!match) {
+      if (/each/i.test(title)) return { qty: 1, unit: "piece" };
+      return { qty: "unknown", unit: "unit" };
+    }
+
+    let qty = parseFloat(match[1]);
+    let unit = match[4].toLowerCase();
+
+    if (unit === "ml") {
+      qty = qty / 1000;
+      unit = "L";
+    } else if (unit === "g") {
+      qty = qty / 1000;
+      unit = "kg";
+    } else if (unit === "pcs" || unit === "piece") {
+      unit = "pieces";
+    } else if (unit === "dozen") {
+      qty = qty * 12;
+      unit = "pieces";
+    }
+
+    return { qty: qty.toFixed(2), unit };
+  }
+
+  function extractNormalizedName(title) {
+    return title
+      .replace(/(Coles|Woolworths|Amazon|Fresh|Organic|Supermarkets)/gi, "")
+      .trim()
+      .split(" ")
+      .slice(0, 3)
+      .join(" ");
+  }
+
+  function groupByNormalizedTitle(deals) {
+    const map = {};
+    deals.forEach((deal) => {
+      const { qty, unit } = normalizeTitleQuantity(deal.title);
+      const name = extractNormalizedName(deal.title);
+      const key = `${name} – ${qty} ${unit}`;
+      if (!map[key]) map[key] = [];
+      map[key].push(deal);
+    });
+    return map;
+  }
+
+  function findBestValue(deals) {
+    return deals.reduce(
+      (a, b) =>
+        parseFloat(a.price.replace(/[^0-9.]/g, "")) <
+        parseFloat(b.price.replace(/[^0-9.]/g, ""))
+          ? a
+          : b,
+      deals[0]
+    );
+  }
+
+  function displayDealsGrouped(dealsData) {
+    const dealsContainer = document.getElementById("deals-container");
+    dealsContainer.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+
+    dealsData.forEach((productData) => {
+      const grouped = groupByNormalizedTitle(productData.deals);
+
+      Object.entries(grouped).forEach(([groupKey, deals]) => {
+        const section = document.createElement("div");
+        section.className =
+          "product-deals p-4 border rounded shadow-sm bg-white";
+        section.setAttribute(
+          "data-product",
+          productData.product.name.toLowerCase()
+        );
+
+        const best = findBestValue(deals);
+
+        if (deals.length > 1) {
+          section.innerHTML = `
+          <h4 class="text-lg font-semibold mb-2">${groupKey}</h4>
+          <div class="space-y-4">
+            ${deals
+              .map(
+                (deal) => `
+              <div class="border rounded-lg p-3 flex gap-4 items-center ${
+                deal === best
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-200"
+              }">
+                <div class="w-24 h-24 bg-white flex items-center justify-center border rounded">
+                  <img src="${deal.image || "./assets/placeholder.png"}" alt="${
+                  deal.title
+                }" class="max-h-full max-w-full object-contain">
+                </div>
+                <div class="flex-1">
+                  <div class="font-semibold">${deal.source}</div>
+                  <div class="text-sm text-gray-500">${deal.title}</div>
+                  ${
+                    deal === best
+                      ? '<div class="text-xs font-bold text-green-600 mt-1">✅ BEST VALUE</div>'
+                      : ""
+                  }
+                  <div class="mt-2 flex justify-between items-center">
+                    <div class="text-indigo-600 font-bold">${deal.price}</div>
+                    <button class="bg-indigo-600 text-white text-sm px-3 py-1 rounded add-to-cart-btn" data-deal='${JSON.stringify(
+                      deal
+                    )}'>Add to Comparison</button>
+                  </div>
+                </div>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        `;
+        } else {
+          const deal = deals[0];
+          section.innerHTML = `
+          <h4 class="text-lg font-semibold mb-2">${groupKey}</h4>
+          <div class="flex gap-4 border p-4 rounded bg-yellow-50 border-yellow-300 items-center">
+            <div class="w-24 h-24 bg-white flex items-center justify-center rounded border">
+              <img src="${deal.image || "./assets/placeholder.png"}" alt="${
+            deal.title
+          }" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800">${deal.source}</div>
+              <div class="text-sm text-gray-600">${deal.title}</div>
+              <div class="text-xs text-yellow-700 mt-1">No other sources available for comparison.</div>
+              <div class="mt-2 flex justify-between items-center">
+                <div class="font-bold text-indigo-600 text-lg">${
+                  deal.price
+                }</div>
+                <button class="bg-indigo-600 text-white px-3 py-1 rounded add-to-cart-btn" data-deal='${JSON.stringify(
+                  deal
+                )}'>Add to Comparison</button>
+              </div>
+            </div>
+          </div>
+        `;
+        }
+
+        wrapper.appendChild(section);
+      });
+    });
+
+    dealsContainer.appendChild(wrapper);
+    document.getElementById("deals-results").classList.remove("hidden");
   }
 
   // Initialize full UI
   updateUI();
   loadRecent();
-  loadFeaturedDeals();
+  // loadFeaturedDeals();
+
+  // Move to top
+  window.addEventListener("scroll", () => {
+    moveTop.classList.toggle("hidden", window.scrollY < 300);
+  });
+
+  moveTop.addEventListener("click", () =>
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  );
+
+  function showToast(message, type = "error") {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+
+    toast.className =
+      "fixed top-5 right-5 z-50 px-4 py-3 rounded shadow-lg transition-opacity duration-300";
+
+    if (type === "error") {
+      toast.classList.add("bg-red-100", "border-red-400", "text-red-800");
+    } else if (type === "success") {
+      toast.classList.add("bg-green-100", "border-green-400", "text-green-800");
+    } else {
+      toast.classList.add("bg-gray-100", "border-gray-400", "text-gray-800");
+    }
+
+    toast.classList.remove("hidden");
+    setTimeout(() => {
+      toast.classList.add("hidden");
+    }, 3000);
+  }
 });
