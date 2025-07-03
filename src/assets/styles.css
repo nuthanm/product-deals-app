@@ -179,3 +179,40 @@ body {
 .deals-container {
   grid-template-columns: auto !important;
 }
+.hero-section {
+  position: relative;
+  background: linear-gradient(to right, #5f40d9, #8e2de2);
+  color: white;
+  padding: 5rem 1rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.hero-section::before,
+.hero-section::after {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.15;
+  z-index: 0;
+}
+
+.hero-section::before {
+  top: 1rem;
+  left: 1rem;
+  background-image: url("https://cdn-icons-png.flaticon.com/512/3075/3075977.png");
+}
+
+.hero-section::after {
+  bottom: 1rem;
+  right: 1rem;
+  background-image: url("https://cdn-icons-png.flaticon.com/512/2838/2838895.png");
+}
+
+.hero-section .content {
+  position: relative;
+  z-index: 1;
+}
