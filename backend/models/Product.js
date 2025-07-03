@@ -1,22 +1,22 @@
-const mongoose = require('mongoose');
+import { Schema, model } from "mongoose";
 
-const ProductSchema = new mongoose.Schema({
+const ProductSchema = new Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   category: {
     type: String,
-    trim: true
+    trim: true,
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // Create text index for search
-ProductSchema.index({ name: 'text' });
+ProductSchema.index({ name: "text" });
 
-module.exports = mongoose.model('Product', ProductSchema);
+export default model("Product", ProductSchema);
