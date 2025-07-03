@@ -1,14 +1,27 @@
-const express = require('express');
-const router = express.Router();
+/*
+Purpose of this class : Handle API routes for autocomplete and deals
+This module defines the API endpoints for product autocomplete search and fetching product deals.
+Dependencies : Express.js for routing, controllers for handling requests.
+Author : Nuthan M
+Created Date : 2025-July-03
+*/
 
-// Import controllers
-const autocompleteController = require('../controllers/autocompleteController');
-const dealsController = require('../controllers/dealsController');
+import { Router } from "express";
+const router = Router();
 
-// Autocomplete route
-router.get('/autocomplete', autocompleteController.getAutocompleteResults);
+import { getAutocompleteResults } from "../controllers/autocompleteController";
+import { getProductDeals, getBestDeals } from "../controllers/dealsController";
 
-// Deals route
-router.post('/deals', dealsController.getProductDeals);
+// This is used to fetch autocomplete results for product search
+// It is used in the search bar to provide suggestions as the user types
+router.get("/autocomplete", getAutocompleteResults);
 
-module.exports = router;
+// This is used to fetch product suggestions based on user input
+// It is used in the search bar to provide suggestions as the user types
+router.post("/deals", getProductDeals);
+
+// We use this to fetch best deals from the database
+// This is used to display the best deals on the homepage
+router.get("/deals/best", getBestDeals);
+
+export default router;
