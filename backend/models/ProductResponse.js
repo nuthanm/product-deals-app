@@ -1,3 +1,11 @@
+/*
+Purpose of this class : Handle product response schema and model
+This module defines the schema for product responses, including product history, products, and their deals.
+Dependencies : Mongoose for schema definition and model creation.
+Author : Nuthan M
+Created Date : 2025-July-03
+*/
+
 import { Schema, model } from "mongoose";
 
 const ProductResponseSchema = new Schema({
