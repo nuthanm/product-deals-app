@@ -196,6 +196,12 @@ async function fetchDealsFromSerpAPI(query) {
 
     // filter & normalize
     const raw = data.shopping_results || [];
+    console.log(`SerpAPI returned ${raw.length} results for query "${query}"`);
+    console.log(`SerpAPI response:`, raw);
+    if (!raw || raw.length === 0) {
+      console.warn("No results found in SerpAPI response");
+      return [];
+    }
     const filtered = filterByAllowedSources(raw, ALLOWED_SOURCES);
     return filtered.map((item) => ({
       title: item.title,
