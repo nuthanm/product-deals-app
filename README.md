@@ -2,7 +2,8 @@
 
 A modern web application that allows users to search for multiple products (up to 5) and find the best shopping deals for each product from across the web.
 
-![image](https://github.com/user-attachments/assets/25423d94-dd2a-4361-a052-32bfdc05c249)
+![image](https://github.com/user-attachments/assets/62c3b906-e0e9-4fbc-bb5d-0c148cfde18b)
+
 
 ## Features
 
