@@ -2,7 +2,8 @@
 
 A modern web application that allows users to search for multiple products (up to 5) and find the best shopping deals for each product from across the web.
 
-![image](https://github.com/user-attachments/assets/62c3b906-e0e9-4fbc-bb5d-0c148cfde18b)
+![image](https://github.com/user-attachments/assets/f883f48c-a633-4ea2-9e2f-97d85e7d0142)
+
 
 
 ## Features
@@ -17,6 +18,9 @@ A modern web application that allows users to search for multiple products (up t
 ## Enhancements
 - **Deal Comparison**: View and compare deals from multiple sources
 - **Load More**: Pagination support for viewing additional deals
+- **Authentication**: Allow Using Google, Facebook.
+- **Dashboard**: Show all the user search history in the main grid( From Most frequent times to least frequent time in a graph format), How much you saved after you since you joined in our family. Provision to store list of search (Max 5) - Create/Update/Delete/Select number of lists with name.
+  - Users to save their search and as well provide an option to save for quicker search in autocomplete with dropdown from existing if any but this option only for authenticated user. Pick if any selected list available to that loggedIn user.
 
 ## Tech Stack
 
@@ -32,7 +36,8 @@ A modern web application that allows users to search for multiple products (up t
 - Redis (optional) for enhanced caching
 
 ## Project Structure
-```PRODUCT-DEALS-APP/
+```
+PRODUCT-DEALS-APP/
 ├── .vscode/                     # VSCode settings (optional)
 │   └── settings.json
 ├── public/                      # Static assets served at /
@@ -90,11 +95,13 @@ A modern web application that allows users to search for multiple products (up t
     cd backend
     npm install
     cp .env.example .env
+    Windows: copy .env.example .env
     # Edit .env with your MongoDB URI and SerpAPI key
    ```
 3. Start the application:
    ```
      npm start
+     npm run dev
    ```
 4. To stop the application
    ```
@@ -115,7 +122,11 @@ POST /api/deals - Get deals for multiple products (up to 5 )
 | SERPAPI_KEY | SerpAPI key for fetching deals | Yes |
 | REDIS_ENABLED | Enable Redis caching (true/false) | No |
 | REDIS_URL | Redis connection string | If Redis enabled |
-| ALLOWED_SOURCES | Comma-separated list of allowed sources | No |
+| ALLOWED_SOURCES | Comma-separated list of allowed sources | Yes |
+| FEATURED_LIMIT | Number of features to allow | Yes |
+| MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS | Default is 2 | Yes |
+| MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED | Max is 5 | Yes |
+| SOURCE_UPDATE_DAYS | Json object where it holds key value pair - On which day source updates the prices | Yes |
 
 ## File wise tech stack for your understand
 | Category          | Technology                        | Purpose                                                | Reference                                              |
@@ -139,6 +150,10 @@ POST /api/deals - Get deals for multiple products (up to 5 )
 | **Deployment**    | Railway                           | Hosted production API endpoint                         | Deployed API at `window.API_BASE_URL`                  |
 | **Config**        | `.env`                            | SERPAPI_KEY, MONGODB_URI, REDIS_URL, ALLOWED_SOURCES    | `.env`                                                 |
 
+### During Development we tested the application using
+**Backend:** [Rail](https://railway.com/)
+
+**Frontend:** [Vercel](https://vercel.com/)
 
 ### It's time to Gratitude
 **[Manus](https://manus.im/)** and **[Open AI - ChatGpt](https://chatgpt.com/)**
