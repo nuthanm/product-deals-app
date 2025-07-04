@@ -63,11 +63,17 @@
       >
         <div class="container mx-auto px-4 text-center">
           <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4">
-            Compare & Save on Your Favorite Products
+            Compare & Save on
+            <span class="text-yellow-300">Your Hard-Earned Money</span>
           </h1>
-          <p class="text-base sm:text-lg md:text-xl mb-6 opacity-90">
-            Search up to 2 products and discover the best deals using Google
-            Serp API.
+          <p class="mb-4 text-lg">
+            Search up to <strong>2 products</strong> and uncover the
+            <strong>best prices</strong>
+            from top online stores.
+          </p>
+          <p id="signed-in-note" class="mb-6 text-sm italic opacity-75 hidden">
+            Sign in to compare up to <strong>5 products per day</strong> and
+            unlock extra savings!
           </p>
 
           <!-- Input + Add Button -->
@@ -115,7 +121,7 @@
           <!-- Get Deals CTA -->
           <button
             id="get-deals"
-            class="mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+            class="mt-6 bg-yellow-400 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-700 transition disabled:opacity-50"
             disabled
           >
             <i class="fas fa-search-dollar mr-2"></i>Get Product(s) Deals
