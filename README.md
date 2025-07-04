@@ -95,5 +95,28 @@ POST /api/deals - Get deals for multiple products (up to 5 )
 | REDIS_URL | Redis connection string | If Redis enabled |
 | ALLOWED_SOURCES | Comma-separated list of allowed sources | No |
 
+## File wise tech stack for your understand
+| Category          | Technology                        | Purpose                                                | Reference                                              |
+|-------------------|-----------------------------------|--------------------------------------------------------|--------------------------------------------------------|
+| **Frontend**      | HTML5                             | Main UI structure                                      | `index.html`                                           |
+|                   | Tailwind CSS                      | Utility-first styling                                  | `index.html`                                           |
+|                   | Font Awesome                      | Icon library                                           | `index.html`                                           |
+|                   | JavaScript (Vanilla)              | DOM manipulation & state management                    | `app.js`                                               |
+|                   | Axios                             | HTTP client for API requests                           | `app.js`                                               |
+|                   | localStorage                      | Persist “Recent Searches”                              | `app.js`                                               |
+| **Backend**       | Node.js                           | JavaScript runtime                                     | `server.js`, `index.js`                                |
+|                   | Express.js                        | Web framework & routing                                | `server.js`, `index.js`                                |
+|                   | dotenv                            | Environment-variable management                         | `server.js`                                            |
+|                   | CORS                              | Cross-origin request support                           | `server.js`                                            |
+| **Controllers**   | AutocompleteController            | `/api/autocomplete` endpoint with caching               | `autocompleteController.js`                            |
+|                   | DealsController                   | `/api/deals` endpoint with SerpAPI integration          | `dealsController.js`                                   |
+| **Database**      | MongoDB (via Mongoose)            | Primary data store & ODM                               | `Product.js`, `ProductHistory.js`, `ProductResponse.js`|
+|                   | Redis                             | Optional caching layer for autocomplete & deals        | Config in `autocompleteController.js`, `dealsController.js` |
+| **External API**  | SerpAPI                           | Fetch live product deals                               | Integrated in `dealsController.js`                     |
+| **Static Data**   | products.json                     | Fallback seed list for autocomplete                    | `products.json`                                        |
+| **Deployment**    | Railway                           | Hosted production API endpoint                         | Deployed API at `window.API_BASE_URL`                  |
+| **Config**        | `.env`                            | SERPAPI_KEY, MONGODB_URI, REDIS_URL, ALLOWED_SOURCES    | `.env`                                                 |
+
+
 ### It's time to Gratitude
-**Autonomous AI agent**: **[Manus](https://manus.im/)**
+**[Manus](https://manus.im/)** and **[Open AI - ChatGpt](https://chatgpt.com/)**
