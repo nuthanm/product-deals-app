@@ -31,29 +31,50 @@ A modern web application that allows users to search for multiple products (up t
 - Redis (optional) for enhanced caching
 
 ## Project Structure
-```
-product-deals-app/
-├── src/                  # Frontend code
-│   ├── assets/           # JavaScript, CSS, and images
-│   │   ├── app.js        # Main application logic
-│   │   ├── styles.css    # Custom styles
-│   │   └── product-icon.svg # Product icon
-│   ├── components/       # UI components
-│   ├── index.html        # Main HTML file
-│   └── usage_policies.md # Usage policies document
-├── backend/              # Backend code
-│   ├── controllers/      # API controllers
-│   │   ├── autocompleteController.js # Handles product search
-│   │   └── dealsController.js        # Handles deal fetching
-│   ├── models/           # MongoDB models
-│   │   ├── Product.js    # Product schema
-│   │   ├── ProductHistory.js # Search history schema
-│   │   └── ProductResponse.js # Cached responses schema
-│   ├── routes/           # API routes
-│   ├── server.js         # Express server
-│   └── .env.example      # Environment variables template
-├── SETUP.md              # Setup instructions
-└── DEPLOYMENT.md         # Deployment guide
+```PRODUCT-DEALS-APP/
+├── .vscode/                     # VSCode settings (optional)
+│   └── settings.json
+├── public/                      # Static assets served at /
+│   ├── favicon.ico
+│   ├── placeholder.png
+│   └── assets/                  # any other images, icons, etc.
+├── src/                         # all app source lives here
+│   ├── pages/                   # Next.js pages & API routes
+│   │   ├── api/                 
+│   │   │   ├── autocomplete.js  # was autocompleteController.js
+│   │   │   └── deals.js         # was dealsController.js
+│   │   ├── _app.js              # global App wrapper
+│   │   └── index.js             # your main UI entry
+│   ├── components/              # reusable React components
+│   │   ├── Autocomplete/        
+│   │   │   └── Autocomplete.jsx
+│   │   ├── DealsList/           
+│   │   │   └── DealsList.jsx
+│   │   └── Layout.jsx           # header/footer, etc.
+│   ├── lib/                     # “server-side” helpers
+│   │   ├── db.js                # mongoose connect
+│   │   ├── redis.js             # redis client
+│   │   ├── serpApi.js           # SerpAPI wrapper
+│   │   └── config.js            # env & allowed sources
+│   ├── models/                  # Mongoose schemas
+│   │   ├── Product.js
+│   │   ├── ProductHistory.js
+│   │   └── ProductResponse.js
+│   ├── data/                    # static seed data
+│   │   └── products.json
+│   └── utils/                   # pure-JS utilities
+│       └── sourceFilter.js
+├── styles/                      # global & component CSS
+│   ├── globals.css              # imports tailwind base/utilities
+│   └── tailwind.config.js       # your Tailwind setup
+├── .env.example                 # sample env vars
+├── .env.local                   # dev env vars (git-ignored)
+├── next.config.js               # Next.js custom config
+├── package.json                 
+├── README.md                    
+├── SETUP.md                     
+├── DEPLOYMENT.md                
+└── USAGE_POLICIES.md            
 ```
 
 ## Installation
