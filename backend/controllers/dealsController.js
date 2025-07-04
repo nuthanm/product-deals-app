@@ -1,28 +1,12 @@
-/*
-Purpose of this class : Handle product deals fetching functionality
-This controller provides an endpoint to fetch product deals based on user input.
-Dependencies : Product, ProductHistory, ProductResponse models, SerpAPI for fetching deals
-Author : Nuthan M
-Created Date : 2025-July-03
-*/
-
 import axios from "axios";
 import Product from "../models/Product.js";
 import ProductHistory from "../models/ProductHistory.js";
 import ProductResponse from "../models/ProductResponse.js";
 import sourceFilter from "../utils/sourceFilter.js";
-
-// Import source filtering utility
-// This utility provides functions to filter items based on allowed sources defined in the environment variable ALLOWED_SOURCES
-// It includes functions to sanitize source names, check if a source is allowed, and filter items
-const { filterByAllowedSources } = sourceFilter;
-
-// Import configuration constants
-// These constants are used to define allowed sources, featured product limits.
 import config from "../utils/config.js";
+
 const {
   ALLOWED_SOURCES,
-  FEATURED_LIMIT,
   MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS,
   MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED,
 } = config;
@@ -30,189 +14,186 @@ const {
 /**
  * POST /api/deals
  * Body: { products: [{ id?, name }], start?: number }
+ *
+ * 1. Validate input & pagination parameters
+ * 2. Enforce per-user product limits (guest vs. authenticated)
+ * 3. Lookup or create Product documents
+ * 4. Record a ProductHistory entry
+ * 5. For each product:
+ *    – Check MongoDB cache (ProductResponse)
+ *    – If no cache, empty cache entry, or paginating (start > 0):
+ *        • Call SerpAPI, sanitize query, filter by allowed sources
+ *        • Update/create cache only on first page
+ *    – Else:
+ *        • Read deals from cache
+ *    – Push { product, deals, source } using a flag to distinguish api vs. db
  */
 export async function getProductDeals(req, res) {
-  try {
-    // How the req.body should look:
-    // {
-    //   products: [
-    //     { id: "productId1" }, // optional, if not provided will
-    //     { name: "Product Name 1" }, // required
-    //     { id: "productId2" }, // optional, if not provided will
-    //     { name: "Product Name 2" } // required
-    //   ],
-    //   start: 0 // optional, default is 0
-    // }
+  console.log("getProductDeals called with body:", req.body);
 
-    // Extract products from request body
+  try {
+    // 1. Validate request body
     const products = req.body?.products;
     if (!Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ message: "Products array is required" });
     }
 
-    // What is the below line doing?
-    // It extracts the 'start' query parameter from the request, defaulting to 0
-    // This parameter is used to determine the starting index for pagination of deals
-    // It allows the client to specify which page of results they want to retrieve
-    // If 'start' is not provided, it defaults to 0
-    // This is useful for paginating results, especially when dealing with large datasets
-    // It allows the client to request a specific page of results, starting from the specified index.
+    // 2. Parse pagination start index
     const start = parseInt(req.query.start || "0", 10);
+    console.log("Pagination start index:", start);
 
-    // If the user is authenticated, we can allow more products to be checked
-    // This is determined by checking if the user is authenticated via req.user
-    // If authenticated, use the configured limit for authenticated users
-    // Otherwise, use the limit for anonymous users
-    // Default: Anonymous users can only fetch 2 products at a time.
-    if (
-      products.length >
-      (req.user
-        ? MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED
-        : MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS)
-    ) {
+    // 3. Enforce per-day product limit
+    const maxAllowed = req.user
+      ? MAXIMUM_PRODUCTS_PERDAY_USER_AUTHENTICATED
+      : MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS;
+    if (products.length > maxAllowed) {
       return res.status(400).json({
         message: `Only ${MAXIMUM_PRODUCTS_PERDAY_USER_ANONYMOUS} products can be checked at a time for guests. Please log in to check more products.`,
       });
     }
 
-    // What is the below block doing?
-    // It processes the products array to find or create Product documents in the database.
-    // For each product in the array, it checks if an ID is provided.
-    // If an ID exists, it fetches the Product by that ID.
-    // If no ID is provided, it searches for an existing Product by name (case-insensitive).
-    // If no existing Product is found, it creates a new Product with the provided name and a default category of "General".
-    // Finally, it filters out any invalid products (null or undefined) and ensures at least one valid product exists.
-    // This ensures that the products array contains valid Product documents before proceeding with further operations.
+    console.log(req.user ? "Authenticated user" : "Anonymous user");
+    console.log(`Processing ${products.length} products (start=${start})`);
+
+    // 4. Resolve or create Product documents
     const productDocs = await Promise.all(
       products.map(async (p) => {
-        if (p.id) return Product.findById(p.id);
-
+        if (p.id) {
+          return Product.findById(p.id);
+        }
+        // Case-insensitive lookup by name
         const existing = await Product.findOne({
           name: new RegExp(`^${p.name}$`, "i"),
         });
-        // If no existing product found, create a new one with default category
-        // This ensures that we always have a valid Product document to work with.
         return (
           existing || Product.create({ name: p.name, category: "General" })
         );
       })
     );
-
-    // Filter out any null or undefined products
-    // This step ensures that we only work with valid Product documents.
     const valid = productDocs.filter(Boolean);
     if (valid.length === 0) {
       return res.status(400).json({ message: "No valid products found" });
     }
+    console.log(
+      "Valid products:",
+      valid.map((p) => p.name)
+    );
 
-    // What is the below block doing?
-    // It creates a new ProductHistory document to track the products being processed.
-    // Todo: We should consider adding a user reference here in the future
-    // This document will store the IDs of the products being processed based out of User too.
-    // So that we can track which user checked which products and show this statistics to the user dashboard.
-    // This is useful for maintaining a history of product checks and can be used for analytics or user tracking.
-    // It creates a new ProductHistory document with the IDs of the valid products.
+    // 5. Record history of this lookup
     const history = await ProductHistory.create({
       products: valid.map((d) => d._id),
     });
+    console.log("Created ProductHistory ID:", history._id);
 
-    // What is the below block doing?
-    // It initializes an empty array to store the results of the product deals.
-    // This array will hold the final response containing product details and their associated deals.
-    // For each valid product, it attempts to fetch deals either from the cache or by calling the SerpAPI.
-    // If the cache is not available or if the 'start' parameter is greater than 0, it fetches fresh deals from the SerpAPI.
-    // If the 'start' parameter is 0, it updates or creates a cache entry
-    // with the fetched deals for that product.
-    // Finally, it pushes the product details and deals into the results array.
-    // This results array will be returned as the response to the client.
-    // It ensures that each product has its deals fetched and cached appropriately.
+    // 6. Fetch deals for each product
     const results = [];
     for (const prod of valid) {
-      // Check if we have cached deals for this product
-      // This query checks if there is a ProductResponse document that contains deals for the product
-      let respDoc = await ProductResponse.findOne({
+      // 6a. Check existing cache entry
+      const initialRespDoc = await ProductResponse.findOne({
         "products.product": prod._id,
         expiresAt: { $gt: new Date() },
       });
+      let respDoc = initialRespDoc;
 
-      // Fetch fresh always when start>0 or cache missing
+      // 6b. Decide whether to fetch from SerpAPI
+      let fetchedFromApi = false;
       let deals = [];
-      if (!respDoc || start > 0) {
+      if (!initialRespDoc || start > 0) {
+        fetchedFromApi = true;
+        //  → sanitize & call SerpAPI
         deals = await fetchDealsFromSerpAPI(prod.name);
+        console.log(
+          `SerpAPI returned ${deals.length} deals for "${prod.name}"`
+        );
 
-        // If first page, insert/update cache
+        // 6c. Update cache only on first page
         if (start === 0) {
-          if (!respDoc) {
+          if (!initialRespDoc) {
             respDoc = await ProductResponse.create({
               productHistory: history._id,
               products: [{ product: prod._id, productName: prod.name, deals }],
             });
+            console.log(`Cached new deals for "${prod.name}"`);
           } else {
             const entry = respDoc.products.find((e) =>
               e.product.equals(prod._id)
             );
             entry.deals = deals;
             await respDoc.save();
+            console.log(`Updated cache for "${prod.name}"`);
           }
         }
       } else {
-        // read from cache
+        // 6d. Cache hit path
         const entry = respDoc.products.find((e) => e.product.equals(prod._id));
         deals = entry?.deals || [];
+        console.log(
+          `Cache hit for "${prod.name}", returning ${deals.length} deals`
+        );
       }
 
+      // 6e. Push final result slice + correctly flagged source
       results.push({
         product: { id: prod._id, name: prod.name },
-        deals: deals.slice(start, start + 10), // page of 10
-        source: start === 0 && respDoc ? "db" : "api",
+        deals: deals.slice(start, start + 10),
+        source: fetchedFromApi ? "api" : "db",
       });
     }
 
-    res.json(results);
+    return res.json(results);
   } catch (err) {
     console.error("getProductDeals error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 }
 
-/** SerpAPI helper with source filtering **/
-async function fetchDealsFromSerpAPI(query) {
+/**
+ * Helper: Fetch raw shopping results from SerpAPI,
+ * sanitize query, filter by ALLOWED_SOURCES, and normalize fields.
+ */
+async function fetchDealsFromSerpAPI(rawQuery) {
   try {
     const apiKey = process.env.SERPAPI_KEY;
     if (!apiKey) throw new Error("SERPAPI_KEY not defined");
 
-    const params = {
-      api_key: apiKey,
-      q: query,
-      engine: "google_shopping",
-      google_domain: "google.com.au",
-      hl: "en",
-      gl: "au",
-      tdm: "shop",
-      num: 40,
-      direct_link: true,
-    };
-    const { data } = await get("https://serpapi.com/search", { params });
+    // Remove punctuation from search term
+    const query = rawQuery.replace(/[^\w\s]/g, "").trim();
+    console.log("Searching SerpAPI for:", query);
 
-    // filter & normalize
+    const { data } = await axios.get("https://serpapi.com/search", {
+      params: {
+        api_key: apiKey,
+        q: query,
+        engine: "google_shopping",
+        google_domain: "google.com.au",
+        hl: "en",
+        gl: "au",
+        tdm: "shop",
+        num: 40,
+        direct_link: true,
+      },
+    });
+
     const raw = data.shopping_results || [];
-    console.log(`SerpAPI returned ${raw.length} results for query "${query}"`);
-    console.log(`SerpAPI response:`, raw);
-    if (!raw || raw.length === 0) {
-      console.warn("No results found in SerpAPI response");
-      return [];
-    }
-    const filtered = filterByAllowedSources(raw, ALLOWED_SOURCES);
-    return filtered.map((item) => ({
-      title: item.title,
-      link: item.product_link || item.link,
-      image: item.thumbnail,
-      price: item.price,
-      source: item.source,
-      rating: item.rating,
-      reviews: item.reviews,
-      shipping: item.shipping,
-    }));
+    console.log(`SerpAPI returned ${raw.length} total raw results`);
+
+    // Filter by allowed sources and normalize shape
+    const filtered = sourceFilter
+      .filterByAllowedSources(raw, ALLOWED_SOURCES)
+      .map((item) => ({
+        title: item.title,
+        link: item.product_link || item.link,
+        image: item.thumbnail,
+        price: item.price,
+        source: item.source,
+        rating: item.rating,
+        reviews: item.reviews,
+        shipping: item.shipping,
+      }));
+
+    return filtered;
   } catch (err) {
     console.error("SerpAPI error:", err);
     return [];
