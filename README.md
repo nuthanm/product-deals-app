@@ -2,7 +2,8 @@
 
 A modern web application that allows users to search for multiple products (up to 5) and find the best shopping deals for each product from across the web.
 
-![image](https://github.com/user-attachments/assets/25423d94-dd2a-4361-a052-32bfdc05c249)
+![image](https://github.com/user-attachments/assets/62c3b906-e0e9-4fbc-bb5d-0c148cfde18b)
+
 
 ## Features
 
@@ -31,29 +32,50 @@ A modern web application that allows users to search for multiple products (up t
 - Redis (optional) for enhanced caching
 
 ## Project Structure
-```
-product-deals-app/
-├── src/                  # Frontend code
-│   ├── assets/           # JavaScript, CSS, and images
-│   │   ├── app.js        # Main application logic
-│   │   ├── styles.css    # Custom styles
-│   │   └── product-icon.svg # Product icon
-│   ├── components/       # UI components
-│   ├── index.html        # Main HTML file
-│   └── usage_policies.md # Usage policies document
-├── backend/              # Backend code
-│   ├── controllers/      # API controllers
-│   │   ├── autocompleteController.js # Handles product search
-│   │   └── dealsController.js        # Handles deal fetching
-│   ├── models/           # MongoDB models
-│   │   ├── Product.js    # Product schema
-│   │   ├── ProductHistory.js # Search history schema
-│   │   └── ProductResponse.js # Cached responses schema
-│   ├── routes/           # API routes
-│   ├── server.js         # Express server
-│   └── .env.example      # Environment variables template
-├── SETUP.md              # Setup instructions
-└── DEPLOYMENT.md         # Deployment guide
+```PRODUCT-DEALS-APP/
+├── .vscode/                     # VSCode settings (optional)
+│   └── settings.json
+├── public/                      # Static assets served at /
+│   ├── favicon.ico
+│   ├── placeholder.png
+│   └── assets/                  # any other images, icons, etc.
+├── src/                         # all app source lives here
+│   ├── pages/                   # Next.js pages & API routes
+│   │   ├── api/                 
+│   │   │   ├── autocomplete.js  # was autocompleteController.js
+│   │   │   └── deals.js         # was dealsController.js
+│   │   ├── _app.js              # global App wrapper
+│   │   └── index.js             # your main UI entry
+│   ├── components/              # reusable React components
+│   │   ├── Autocomplete/        
+│   │   │   └── Autocomplete.jsx
+│   │   ├── DealsList/           
+│   │   │   └── DealsList.jsx
+│   │   └── Layout.jsx           # header/footer, etc.
+│   ├── lib/                     # “server-side” helpers
+│   │   ├── db.js                # mongoose connect
+│   │   ├── redis.js             # redis client
+│   │   ├── serpApi.js           # SerpAPI wrapper
+│   │   └── config.js            # env & allowed sources
+│   ├── models/                  # Mongoose schemas
+│   │   ├── Product.js
+│   │   ├── ProductHistory.js
+│   │   └── ProductResponse.js
+│   ├── data/                    # static seed data
+│   │   └── products.json
+│   └── utils/                   # pure-JS utilities
+│       └── sourceFilter.js
+├── styles/                      # global & component CSS
+│   ├── globals.css              # imports tailwind base/utilities
+│   └── tailwind.config.js       # your Tailwind setup
+├── .env.example                 # sample env vars
+├── .env.local                   # dev env vars (git-ignored)
+├── next.config.js               # Next.js custom config
+├── package.json                 
+├── README.md                    
+├── SETUP.md                     
+├── DEPLOYMENT.md                
+└── USAGE_POLICIES.md            
 ```
 
 ## Installation
@@ -95,5 +117,28 @@ POST /api/deals - Get deals for multiple products (up to 5 )
 | REDIS_URL | Redis connection string | If Redis enabled |
 | ALLOWED_SOURCES | Comma-separated list of allowed sources | No |
 
+## File wise tech stack for your understand
+| Category          | Technology                        | Purpose                                                | Reference                                              |
+|-------------------|-----------------------------------|--------------------------------------------------------|--------------------------------------------------------|
+| **Frontend**      | HTML5                             | Main UI structure                                      | `index.html`                                           |
+|                   | Tailwind CSS                      | Utility-first styling                                  | `index.html`                                           |
+|                   | Font Awesome                      | Icon library                                           | `index.html`                                           |
+|                   | JavaScript (Vanilla)              | DOM manipulation & state management                    | `app.js`                                               |
+|                   | Axios                             | HTTP client for API requests                           | `app.js`                                               |
+|                   | localStorage                      | Persist “Recent Searches”                              | `app.js`                                               |
+| **Backend**       | Node.js                           | JavaScript runtime                                     | `server.js`, `index.js`                                |
+|                   | Express.js                        | Web framework & routing                                | `server.js`, `index.js`                                |
+|                   | dotenv                            | Environment-variable management                         | `server.js`                                            |
+|                   | CORS                              | Cross-origin request support                           | `server.js`                                            |
+| **Controllers**   | AutocompleteController            | `/api/autocomplete` endpoint with caching               | `autocompleteController.js`                            |
+|                   | DealsController                   | `/api/deals` endpoint with SerpAPI integration          | `dealsController.js`                                   |
+| **Database**      | MongoDB (via Mongoose)            | Primary data store & ODM                               | `Product.js`, `ProductHistory.js`, `ProductResponse.js`|
+|                   | Redis                             | Optional caching layer for autocomplete & deals        | Config in `autocompleteController.js`, `dealsController.js` |
+| **External API**  | SerpAPI                           | Fetch live product deals                               | Integrated in `dealsController.js`                     |
+| **Static Data**   | products.json                     | Fallback seed list for autocomplete                    | `products.json`                                        |
+| **Deployment**    | Railway                           | Hosted production API endpoint                         | Deployed API at `window.API_BASE_URL`                  |
+| **Config**        | `.env`                            | SERPAPI_KEY, MONGODB_URI, REDIS_URL, ALLOWED_SOURCES    | `.env`                                                 |
+
+
 ### It's time to Gratitude
-**Autonomous AI agent**: **[Manus](https://manus.im/)**
+**[Manus](https://manus.im/)** and **[Open AI - ChatGpt](https://chatgpt.com/)**
