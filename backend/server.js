@@ -12,20 +12,19 @@ import express, { json, urlencoded, static as expressStatic } from "express";
 import { connect } from "mongoose";
 import cors from "cors";
 import routes from "./routes/index.js";
-import { join } from "path"; //- For local static file serving
+import path from "path";
 import { fileURLToPath } from "url";
-// import { dirname } from "path";
 
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 // ✅ Must be first: Health check
-app.get("/", (req, res) => {
-  res.status(200).send("✅ API backend is running");
-});
+// app.get("/", (req, res) => {
+//   res.status(200).send("✅ API backend is running");
+// });
 
 // ✅ Middlewares
 app.use(cors());
@@ -34,7 +33,7 @@ app.use(urlencoded({ extended: true }));
 
 // ✅ Static files - For Local testing
 // Serve static files from the "src" directory
-// Todo: app.use(expressStatic(join(__dirname, "../src")));
+app.use(express.static(path.join(__dirname, "../src")));
 
 // ✅ Routes
 app.use("/api", routes);
